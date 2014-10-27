@@ -108,7 +108,8 @@ class GetContent extends Actor {
 
     def processResponse: PartialFunction[Try[Elements], Unit] = {
       case Success(newElements) =>
-        log.info(s"New elements: $newElements")
+        //log.info(s"New elements: $newElements")
+        println(s"New elements: $newElements")
         newElements foreach {
           case element if element startsWith "?" =>
           // stay on the same page
