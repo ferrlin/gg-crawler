@@ -2,6 +2,7 @@ package in.ferrl.crawler.core
 
 import akka.actor.{ Actor, Props }
 import akka.util.Timeout
+import akka.event.Logging
 
 /**
  * Represents the instance of the URL that is
@@ -34,10 +35,15 @@ class NaiveCrawler extends Actor {
   val contentActor = context.actorOf(Props[GetContent], "GetContent")
   val saveActor = context.actorOf(Props[SaveContent], "SaveContent")
 
+  val log = Logging(context.system, this)
+
   def receive: Receive = {
-    case Crawl(url) => contentActor ! Request(url) // Call GetContent actor
+    case Crawl(url) => {
+      log.info("Messaged received.. Initiating crawling to $url.url")
+      contentActor ! Request(url) // Call GetContent actor
+    }
     case Save => // Do nothing for now
-    case _ => // Do nothing for now
+    case _ => log.info("Do nothing for now")
   }
 }
 
@@ -108,8 +114,8 @@ class GetContent extends Actor {
 
     def processResponse: PartialFunction[Try[Elements], Unit] = {
       case Success(newElements) =>
-        //log.info(s"New elements: $newElements")
-        println(s"New elements: $newElements")
+        log.info(s"New elements: $newElements")
+        // println(s"New elements: $newElements")
         newElements foreach {
           case element if element startsWith "?" =>
           // stay on the same page
@@ -136,6 +142,7 @@ class GetContent extends Actor {
     // 1. Check validity of URL
     prepareUrl(url) match {
       case Success(url) =>
+        log.info(s"Succeeded crawling for $url")
         // 2. Make an http request to get content
         pipeline(Get(url.toString)) onComplete processResponse
       case Failure(ex) => log.info(ex.getMessage)

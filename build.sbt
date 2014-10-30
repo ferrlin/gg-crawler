@@ -13,6 +13,7 @@ libraryDependencies ++= {
 	val sprayV = "1.3.2"
 	val jsonV = "1.3.0"
 	val sioV = "0.4.3"
+	val konV = "0.3.2"
 	Seq(
 		"com.typesafe.akka" %% "akka-actor" % akkaV,
 		"com.typesafe.akka" %% "akka-slf4j" % akkaV,
@@ -28,7 +29,10 @@ libraryDependencies ++= {
 		"org.specs2" %% "specs2" % "1.14" % "test",
 		"io.spray" % "spray-testkit" % "1.2-20130712" % "test",
 		"com.typesafe.akka" %% "akka-testkit" % "2.2.0" % "test",
-		"com.novocode" % "junit-interface" % "0.7" % "test->default"
+		"com.novocode" % "junit-interface" % "0.7" % "test->default",
+		"io.kamon" %% "kamon-core" % konV,
+		"io.kamon" %% "kamon-spray" % konV,
+		"io.kamon" %% "kamon-statsd" % konV
 	)
 }
 
