@@ -15,5 +15,8 @@ object Main extends App {
     val naive = ggSystem.actorOf(Props[NaiveCrawler], "naive")
 
     naive ! Crawl(CrawlerUrl("http://ferrl.in", 5, false))
+
+    // statement to expect a response after sending a crawl message
+    // naive ? Crawl(CrawlerUrl("http://ferrl.in", 5, false))
   }
 }
