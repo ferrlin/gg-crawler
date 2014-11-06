@@ -13,7 +13,7 @@ object Main extends App {
     val ggSystem = ActorSystem("gg-crawler-system")
     val naive = ggSystem.actorOf(Props[NaiveCrawler], "naive")
 
-    naive ! GET("http://ferrl.in/", 3)
+    naive ! GET("http://ferrl.in/")
 
     // statement to expect a response after sending a crawl message
     // naive ? GET("http://ferrl.in")

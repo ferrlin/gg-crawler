@@ -7,8 +7,8 @@ import akka.event.Logging
  * Represents the instance of the URL that is
  * visited by the crawler
  */
-case class CrawlerUrl(url: String, depth: Int,
-  allowedToVisit: Boolean, checkedForPermission: Boolean = false, visited: Boolean = false)
+case class CrawlerUrl(url: String, depth: Int = 1,
+  allowedToVisit: Boolean = true, checkedForPermission: Boolean = false, visited: Boolean = false)
 
 object NaiveCrawler {
   /**
@@ -22,7 +22,7 @@ object NaiveCrawler {
   /**
    * Messages for our crawler
    */
-  case class GET(url: String, depth: Int)
+  case class GET(url: String)
   case class Request(url: CrawlerUrl)
   case object Save
 }
@@ -35,9 +35,9 @@ class NaiveCrawler extends Actor {
   val log = Logging(context.system, this)
 
   def receive: Receive = {
-    case GET(url, depth) ⇒ {
+    case GET(url) ⇒ {
       log.info(s"Messaged received.. Initiating crawl to $url")
-      contentActor ! Request(CrawlerUrl(url, depth, true)) // Call GetContent actor
+      contentActor ! Request(CrawlerUrl(url)) // Call GetContent actor
     }
     case Save ⇒ // Do nothing for now
     case _ ⇒ log.info("Do nothing for now")
