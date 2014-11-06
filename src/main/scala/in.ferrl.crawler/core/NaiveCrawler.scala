@@ -22,24 +22,22 @@ object NaiveCrawler {
   /**
    * Messages for our crawler
    */
-  case class Crawl(url: CrawlerUrl)
+  case class GET(url: String, depth: Int)
   case class Request(url: CrawlerUrl)
   case object Save
 }
 
-
 class NaiveCrawler extends Actor {
-  
-import NaiveCrawler._
+
+  import NaiveCrawler._
   val contentActor = context.actorOf(Props[GetContent], "GetContent")
   val saveActor = context.actorOf(Props[SaveContent], "SaveContent")
-
   val log = Logging(context.system, this)
 
   def receive: Receive = {
-    case Crawl(url) ⇒ {
-      log.info("Messaged received.. Initiating crawling to $url.url")
-      contentActor ! Request(url) // Call GetContent actor
+    case GET(url, depth) ⇒ {
+      log.info(s"Messaged received.. Initiating crawl to $url")
+      contentActor ! Request(CrawlerUrl(url, depth, true)) // Call GetContent actor
     }
     case Save ⇒ // Do nothing for now
     case _ ⇒ log.info("Do nothing for now")
