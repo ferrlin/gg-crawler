@@ -21,18 +21,19 @@ object NaiveCrawler {
   val REGEXP_HTTP = "<a href=\"http://(.)*\">"
   val REGEXT_RELATIVE = "<a href=\"(.)*\">"
 
+  sealed trait NaiveMsg
+
   /**
    * Messages for our crawler
    */
-  case class GET(url: String)
-  case class Request(url: CrawlerUrl)
-  case object Save
+  case class GET(url: String) extends NaiveMsg
+  case class Request(url: CrawlerUrl) extends NaiveMsg
+  case object Save extends NaiveMsg
 }
 
-class NaiveCrawler extends Master[CrawlerUrl] {
+import NaiveCrawler._
 
-  import NaiveCrawler._
-
+class NaiveCrawler extends Master[NaiveMsg] {
   /*
   def receive: Receive = {
     case GET(url) ⇒ {

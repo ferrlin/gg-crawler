@@ -49,7 +49,7 @@ object GetContent {
 /**
  * Actor for getting http content
  */
-class GetContent(master: ActorRef) extends Worker[String](master) {
+class GetContent(master: ActorRef) extends Worker[GET](master) {
 
   import GetContent._
 
@@ -58,7 +58,7 @@ class GetContent(master: ActorRef) extends Worker[String](master) {
 
   private val pipeline = sendReceive ~> unmarshal[Elements]
 
-  def doWork(url: String): Future[_] = {
+  def doWork(work: GET): Future[_] = {
     // Validate url 
     def prepareUrl(url: String): Try[URL] = Try(new URL(url))
 
@@ -66,42 +66,16 @@ class GetContent(master: ActorRef) extends Worker[String](master) {
       val lastSlash = s.lastIndexOf('/')
       if (lastSlash != -1) s.substring(0, lastSlash) else s
     }
-
-    def processResponse: PartialFunction[Try[Elements], Option[Elements]] = {
-      case Success(newElements) ⇒
-        log.info(s"New elements: $newElements")
-        // println(s"New elements: $newElements")
-        /*
-        newElements foreach {
-          case element if element startsWith "?" ⇒
-          // stay on the same page
-          case element if !element.startsWith(FORWARD_SLASH) &&
-            !element.startsWith(HTTP) &&
-            !element.endsWith(FORWARD_SLASH) ⇒
-            self ! elements :+ element
-          case element if !element.startsWith(FORWARD_SLASH) &&
-            !element.startsWith(HTTP) &&
-            element.endsWith(JAR_SUFFIX) ⇒
-            // this is .jar file , not a directory
-            val (rawVersion :: rawArtifactId :: rawGroupId) = newElements.reverse
-            val groupId = rawGroupId.reverse.map(dropLastSlash) mkString "."
-            val version = dropLastSlash(rawVersion)
-            val artifactId = dropLastSlash(rawArtifactId)
-
-          // throws "too many arguments for method " exception
-          // dependencyStorage ! (baseUrl, groupId, artifactId, versionId)
-          case x ⇒ None // some unknown form
-        }
-        */
-        Some(newElements)
+    /*def processResponse: PartialFunction[Try[Elements], Option[Elements]] = {
+      case Success(newElements) ⇒ Some(newElements)
       case Failure(ex) ⇒ None // do nothing for now
-    }
+    }*/
     // 1. Check validity of URL
-    prepareUrl(url) match {
-      case Success(url) ⇒
+    prepareUrl(work.url) match {
+      case Success(url: URL) ⇒
         log.info(s"Succeeded crawling for $url")
         // 2. Make an http request to get content
-        pipeline(Get(url.toString)) onComplete processResponse
+        pipeline(Get(url.toString)) //onComplete processResponse
       case Failure(ex) ⇒ Future.failed[String](new IllegalArgumentException(ex.getMessage))
     }
   }

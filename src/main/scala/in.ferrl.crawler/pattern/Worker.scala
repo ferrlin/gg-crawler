@@ -2,7 +2,7 @@ package in.ferrl.crawler.pattern
 
 import akka.actor.{ Actor, ActorRef }
 import scala.concurrent.Future
-import scala.reflect.{ ClassTag, Manifest }
+import scala.reflect.ClassTag
 import WorkPulling._
 
 abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Manifest[T])

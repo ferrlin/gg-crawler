@@ -11,7 +11,10 @@ object Main extends App {
     import NaiveCrawler._
 
     val ggSystem = ActorSystem("gg-crawler-system")
-    val naive = ggSystem.actorOf(Props[NaiveCrawler], "naive")
+
+    // val naive = ggSystem.actorOf(Props[NaiveCrawler], "naive")
+
+    val naive = ggSystem.actorOf(Props[NaiveCrawler])
 
     naive ! GET("http://ferrl.in/")
 
