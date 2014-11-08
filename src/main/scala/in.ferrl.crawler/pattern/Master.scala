@@ -13,9 +13,10 @@ class Master[T] extends Actor {
 
   def receive = {
     case epic: Epic[T] ⇒
-      if (currentEpic.isDefined)
+      if (currentEpic.isDefined) {
+        log.info("Master Actor is busy")
         sender ! CurrentlyBusy
-      else if (workers.isEmpty)
+      } else if (workers.isEmpty)
         log.error("Got work but there are no workers registered.")
       else {
         currentEpic = Some(epic)
