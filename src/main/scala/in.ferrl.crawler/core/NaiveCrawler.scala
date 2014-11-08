@@ -3,6 +3,8 @@ package in.ferrl.crawler.core
 import akka.actor.{ Actor, Props }
 import akka.util.Timeout
 import akka.event.Logging
+import in.ferrl.crawler.pattern.Master
+import in.ferrl.crawler.pattern.WorkPulling._
 /**
  * Represents the instance of the URL that is
  * visited by the crawler
@@ -27,13 +29,11 @@ object NaiveCrawler {
   case object Save
 }
 
-class NaiveCrawler extends Actor {
+class NaiveCrawler extends Master[CrawlerUrl] {
 
   import NaiveCrawler._
-  val contentActor = context.actorOf(Props[GetContent], "GetContent")
-  val saveActor = context.actorOf(Props[SaveContent], "SaveContent")
-  val log = Logging(context.system, this)
 
+  /*
   def receive: Receive = {
     case GET(url) ⇒ {
       log.info(s"Messaged received.. Initiating crawl to $url")
@@ -42,4 +42,5 @@ class NaiveCrawler extends Actor {
     case Save ⇒ // Do nothing for now
     case _ ⇒ log.info("Do nothing for now")
   }
+  */
 }
