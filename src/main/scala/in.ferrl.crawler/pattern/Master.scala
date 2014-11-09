@@ -42,5 +42,6 @@ class Master[T] extends Actor {
           currentEpic = None
         }
     }
+    case Done(result) ⇒ sender ! result
   }
 }

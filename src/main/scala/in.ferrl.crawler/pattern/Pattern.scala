@@ -11,4 +11,6 @@ object WorkPulling {
   case object WorkAvailable extends Message
   case class RegisterWorker(worker: ActorRef) extends Message
   case class Work[T](work: T) extends Message
+  // custom Message for this pattern
+  case class Done[T](task: T) extends Message
 }

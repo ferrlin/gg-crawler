@@ -25,6 +25,7 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
       doWork(work) onComplete {
         case Success(result) ⇒
           log.info(s"Result:$result")
+          sender ! Done(result) // Need to wrap this later..
           master ! GimmeWork
         case _ ⇒ master ! GimmeWork
       }
