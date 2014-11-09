@@ -7,14 +7,10 @@ import scala.util.{ Try, Success, Failure }
 import scala.concurrent.Future
 import java.net.URL
 import akka.actor.{ Actor, ActorRef }
-import akka.event.Logging
-import akka.util.Timeout
-import spray.client.pipelining._
 
 import scala.concurrent.duration._
 import in.ferrl.crawler.pattern.Worker
 import in.ferrl.crawler.pattern.WorkPulling._
-import NaiveCrawler._
 
 /**
  * Companion object for our GetContent actor.
@@ -24,16 +20,6 @@ import NaiveCrawler._
 object GetContent {
 
   private type Elements = List[String]
-
-  /**
-   * Constants
-   */
-  val HTTP = "http"
-  val HTTPs = "https"
-  val FORWARD_SLASH = "/"
-  val HTTP_PREFIX = s"$HTTP://"
-  val HTTPs_PREFIX = s"$HTTPs://"
-  val JAR_SUFFIX = ".jar"
 
   implicit object StringUnmarshaller extends Unmarshaller[Elements] {
     val AHrefRegex = """<a href="([^"]*)">[^<]*</a>""".r
@@ -46,37 +32,36 @@ object GetContent {
   }
 }
 
+import NaiveCrawler._
 /**
  * Actor for getting http content
  */
 class GetContent(master: ActorRef) extends Worker[GET](master) {
 
   import GetContent._
+  import spray.client.pipelining._
+  import akka.util.Timeout
 
-  private val log = Logging(context.system, this)
-  implicit val timeout = Timeout(10.seconds)
+  implicit val timeout = Timeout(10 seconds)
 
   private val pipeline = sendReceive ~> unmarshal[Elements]
 
   def doWork(work: GET): Future[_] = {
-    // Validate url 
+
     def prepareUrl(url: String): Try[URL] = Try(new URL(url))
 
     def dropLastSlash(s: String): String = {
       val lastSlash = s.lastIndexOf('/')
       if (lastSlash != -1) s.substring(0, lastSlash) else s
     }
-    /*def processResponse: PartialFunction[Try[Elements], Option[Elements]] = {
-      case Success(newElements) ⇒ Some(newElements)
-      case Failure(ex) ⇒ None // do nothing for now
-    }*/
-    // 1. Check validity of URL
+
     prepareUrl(work.url) match {
       case Success(url: URL) ⇒
-        log.info(s"Succeeded crawling for $url")
-        // 2. Make an http request to get content
-        pipeline(Get(url.toString)) //onComplete processResponse
-      case Failure(ex) ⇒ Future.failed[String](new IllegalArgumentException(ex.getMessage))
+        log.info("Requesting to get content of $url..")
+        pipeline(Get(url.toString))
+      // Future { log.warning("Hello, Im not using spray-client") }
+      // case Failure(ex) ⇒ Future.failed[String](new IllegalArgumentException(ex.getMessage))
+      case Failure(ex) ⇒ Future { log.error(ex.getMessage) }
     }
   }
 }

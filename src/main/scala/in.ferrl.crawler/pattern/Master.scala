@@ -34,9 +34,10 @@ class Master[T] extends Actor {
         log.info("workers asked for work but we've no more work to do")
       case Some(epic) ⇒
         val iter = epic.iterator
-        if (iter.hasNext)
+        if (iter.hasNext) {
+          log.info("Send work to worker from master..")
           sender ! Work(iter.next)
-        else {
+        } else {
           log.info(s"done with current epic $epic")
           currentEpic = None
         }

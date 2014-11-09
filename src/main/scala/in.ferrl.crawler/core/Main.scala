@@ -11,19 +11,21 @@ object Main extends App {
 
     import NaiveCrawler._
 
-    val ggSystem = ActorSystem("gg-crawler-system")
+    val ggSystem = ActorSystem("ggSystem")
 
     // val naive = ggSystem.actorOf(Props[NaiveCrawler], "naive")
 
     def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
 
-    val naive = ggSystem.actorOf(Props[NaiveCrawler])
-    val getter = ggSystem.actorOf(Props(new GetContent(naive)))
+    val naive = ggSystem.actorOf(Props[NaiveCrawler], "master")
+    val getter = ggSystem.actorOf(Props(new GetContent(naive)), "worker-1")
 
-    Thread.sleep(5000)
-    naive ! newEpic(GET("http://ferrl.in/"))
+    Thread.sleep(1000)
+    naive ! newEpic(GET("http://ferrl.in"))
 
     // statement to expect a response after sending a crawl message
     // naive ? GET("http://ferrl.in")
+    Thread.sleep(3000)
+    ggSystem.shutdown()
   }
 }
