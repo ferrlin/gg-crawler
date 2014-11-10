@@ -13,4 +13,5 @@ object WorkPulling {
   case class Work[T](work: T) extends Message
   // custom Message for this pattern
   case class Done[T](task: T) extends Message
+  case class Result[T](result: T) extends Message
 }

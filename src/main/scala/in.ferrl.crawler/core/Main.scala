@@ -1,6 +1,7 @@
 package in.ferrl.crawler.core
 
 import akka.actor.{ Props, ActorSystem }
+import scala.util.Success
 import akka.pattern.ask
 import in.ferrl.crawler.pattern.WorkPulling._
 
@@ -26,13 +27,19 @@ object Main extends App {
     val getter = ggSystem.actorOf(Props(new GetContent(naive)), "worker-1")
 
     Thread.sleep(1000)
-    naive ! newEpic(GET("http://ferrl.in"))
+    // naive ! newEpic(GET("http://ferrl.in"))
+
+    import scala.concurrent.ExecutionContext.Implicits.global
 
     val f = naive ? newEpic(GET("http://ferrl.in"))
 
+    f onSuccess {
+      case Result(r) ⇒ println(s"The result is $r")
+    }
+
     // statement to expect a response after sending a crawl message
     // naive ? GET("http://ferrl.in")
-    Thread.sleep(3000)
-    ggSystem.shutdown()
+    // Thread.sleep(3000)
+    // ggSystem.shutdown()
   }
 }

@@ -1,6 +1,7 @@
 package in.ferrl.crawler.pattern
 
 import akka.actor.{ Actor, ActorRef, Terminated }
+import scala.util.Success
 import scala.collection.mutable
 import akka.event.Logging
 import WorkPulling._
@@ -42,6 +43,6 @@ class Master[T] extends Actor {
           currentEpic = None
         }
     }
-    case Done(result) ⇒ sender ! result
+    case Done(result) ⇒ sender ! Success(result)
   }
 }
