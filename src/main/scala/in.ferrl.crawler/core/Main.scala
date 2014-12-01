@@ -27,10 +27,15 @@ object Main extends App {
     val getter = ggSystem.actorOf(Props(new GetContent(naive)), "worker-1")
 
     Thread.sleep(1000)
+    // Use the code below if you don't care about the result
+    // or you want the system to save it for your after retrieval
+    // this is where SaveContent actor comes in
     // naive ! newEpic(GET("http://ferrl.in"))
 
     import scala.concurrent.ExecutionContext.Implicits.global
 
+    // Use this pattern if you're interest in the result
+    // where you're waiting for it before saying it done.
     val f = naive ? newEpic(GET("http://ferrl.in"))
 
     f onSuccess {
