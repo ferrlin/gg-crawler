@@ -9,8 +9,8 @@ import in.ferrl.crawler.pattern.WorkPulling._
  * Represents the instance of the URL that is
  * visited by the crawler
  */
-case class CrawlerUrl(url: String, depth: Int = 1,
-  allowedToVisit: Boolean = true, checkedForPermission: Boolean = false, visited: Boolean = false)
+// case class CrawlerUrl(url: String, depth: Int = 1,
+// allowedToVisit: Boolean = true, checkedForPermission: Boolean = false, visited: Boolean = false)
 
 object NaiveCrawler {
   /**
@@ -21,19 +21,19 @@ object NaiveCrawler {
   val REGEXP_HTTP = "<a href=\"http://(.)*\">"
   val REGEXT_RELATIVE = "<a href=\"(.)*\">"
 
-  sealed trait NaiveMsg
+  sealed trait ggMessages
 
-  /**
-   * Messages for our crawler
-   */
-  case class GET(url: String) extends NaiveMsg
-  case class Request(url: CrawlerUrl) extends NaiveMsg
-  case object Save extends NaiveMsg
+  case class Fetch(url: String, depth: Int, metadata: Map[String, Any]) extends ggMessages
+  case class FetchComplete(id: String) extends ggMessages
+  case class Parse(id: String) extends ggMessages
+  case class ParseComplete(id: String) extends ggMessages
+  case class Index(id: String) extends ggMessages
+  case class IndexComplete(id: String) extends ggMessages
 }
 
 import NaiveCrawler._
 
-class NaiveCrawler extends Master[NaiveMsg] {
+class NaiveCrawler extends Master[ggMessages] {
   /*
   def receive: Receive = {
     case GET(url) ⇒ {

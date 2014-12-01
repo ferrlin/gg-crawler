@@ -23,8 +23,8 @@ object Main extends App {
 
     def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
 
-    val naive = ggSystem.actorOf(Props[NaiveCrawler], "master")
-    val getter = ggSystem.actorOf(Props(new GetContent(naive)), "worker-1")
+    val master = ggSystem.actorOf(Props[NaiveCrawler], "master")
+    val getter = ggSystem.actorOf(Props(new FetchWorker(master)), "worker-1")
 
     Thread.sleep(1000)
     // Use the code below if you don't care about the result
@@ -36,7 +36,8 @@ object Main extends App {
 
     // Use this pattern if you're interest in the result
     // where you're waiting for it before saying it done.
-    val f = naive ? newEpic(GET("http://ferrl.in"))
+    // val f = naive ? newEpic(GET("http://ferrl.in"))
+    val f = master ? newEpic(Fetch(url = "http://ferrl.in", depth = 1, metadata = Map.empty))
 
     f onSuccess {
       case Result(r) ⇒ println(s"The result is $r")

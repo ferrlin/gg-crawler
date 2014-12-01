@@ -17,7 +17,7 @@ import in.ferrl.crawler.pattern.WorkPulling._
  * Our string unmarshaller is defined here as well
  * as our custom type.
  */
-object GetContent {
+object FetchWorker {
 
   private type Elements = List[String]
 
@@ -36,9 +36,9 @@ import NaiveCrawler._
 /**
  * Actor for getting http content
  */
-class GetContent(master: ActorRef) extends Worker[GET](master) {
+class FetchWorker(master: ActorRef) extends Worker[Fetch](master) {
 
-  import GetContent._
+  import FetchWorker._
   import spray.client.pipelining._
   import akka.util.Timeout
 
@@ -46,7 +46,7 @@ class GetContent(master: ActorRef) extends Worker[GET](master) {
 
   private val pipeline = sendReceive ~> unmarshal[Elements]
 
-  def doWork(work: GET): Future[_] = {
+  def doWork(work: Fetch): Future[_] = {
 
     def prepareUrl(url: String): Try[URL] = Try(new URL(url))
 
