@@ -8,7 +8,7 @@ object WorkPulling {
   trait Epic[T] extends Iterable[T]
   case object GimmeWork extends Message
   case object CurrentlyBusy extends Message
-  case object WorkAvailable extends Message
+  case class WorkAvailable[T](someType: T) extends Message
   case class RegisterWorker(worker: ActorRef) extends Message
   case class Work[T](work: T) extends Message
   // custom Messages for this pattern
@@ -36,7 +36,8 @@ class Master[T] extends Actor with ActorLogging {
         log.error("Got work but there are no workers registered.")
       else {
         currentEpic = Some(epic)
-        workers foreach { _ ! WorkAvailable }
+        // workers foreach { _ ! WorkAvailable }
+        workers foreach { w ⇒ epic.iterator.foreach { w ! WorkAvailable(_) } }
       }
     case RegisterWorker(worker) ⇒
       log.info(s"worker $worker registered")
@@ -76,8 +77,8 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
   }
 
   def receive = {
-    case WorkAvailable ⇒
-      master ! GimmeWork
+    case WorkAvailable(someType: T) ⇒
+      if (isCompatible(someType)) master ! GimmeWork
     case Work(work: T) ⇒
       doWork(work) onComplete {
         case Success(result) ⇒
@@ -87,6 +88,8 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
         case _ ⇒ master ! GimmeWork
       }
   }
+
+  def isCompatible(someType: T): Boolean
 
   def doWork(work: T): Future[_]
 }

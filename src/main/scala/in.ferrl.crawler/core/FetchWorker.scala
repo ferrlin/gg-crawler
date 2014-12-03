@@ -4,7 +4,7 @@ import spray.http.HttpEntity
 import spray.httpx.unmarshalling.{ MalformedContent, Unmarshaller, Deserialized }
 
 import scala.util.{ Try, Success, Failure }
-import scala.concurrent.Future
+import scala.concurrent.{ Future, future }
 import java.net.URL
 import akka.actor.{ Actor, ActorRef }
 
@@ -36,7 +36,7 @@ import NaiveCrawler._
 /**
  * Actor for getting http content
  */
-class FetchWorker(master: ActorRef) extends Worker[Fetch](master) {
+class FetchWorker(master: ActorRef) extends Worker[ggMessages](master) {
 
   import FetchWorker._
   import spray.client.pipelining._
@@ -46,22 +46,30 @@ class FetchWorker(master: ActorRef) extends Worker[Fetch](master) {
 
   private val pipeline = sendReceive ~> unmarshal[Elements]
 
-  def doWork(work: Fetch): Future[_] = {
+  def isCompatible(someType: ggMessages): Boolean = someType match {
+    case Fetch(_, _, _) ⇒ true
+    case _ ⇒ false
+  }
 
-    def prepareUrl(url: String): Try[URL] = Try(new URL(url))
+  def doWork(work: ggMessages): Future[_] = work match {
+    case Fetch(url, _, _) ⇒
+      def prepareUrl(url: String): Try[URL] = Try(new URL(url))
 
-    def dropLastSlash(s: String): String = {
-      val lastSlash = s.lastIndexOf('/')
-      if (lastSlash != -1) s.substring(0, lastSlash) else s
-    }
+      def dropLastSlash(s: String): String = {
+        val lastSlash = s.lastIndexOf('/')
+        if (lastSlash != -1) s.substring(0, lastSlash) else s
+      }
 
-    prepareUrl(work.url) match {
-      case Success(url: URL) ⇒
-        log.info("Requesting to get content of $url..")
-        pipeline(Get(url.toString))
-      // Future { log.warning("Hello, Im not using spray-client") }
-      // case Failure(ex) ⇒ Future.failed[String](new IllegalArgumentException(ex.getMessage))
-      case Failure(ex) ⇒ Future { log.error(ex.getMessage) }
+      prepareUrl(url) match {
+        case Success(url: URL) ⇒
+          log.info("Requesting to get content of $url..")
+          pipeline(Get(url.toString))
+        // Future { log.warning("Hello, Im not using spray-client") }
+        // case Failure(ex) ⇒ Future.failed[String](new IllegalArgumentException(ex.getMessage))
+        case Failure(ex) ⇒ future { log.error(ex.getMessage) }
+      }
+    case _ ⇒ future {
+      // do nothing
     }
   }
 }
