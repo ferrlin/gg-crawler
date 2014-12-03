@@ -11,13 +11,13 @@ object WorkPulling {
   case class WorkAvailable[T](someType: T) extends Message
   case class RegisterWorker(worker: ActorRef) extends Message
   case class Work[T](work: T) extends Message
-  // custom Messages for this pattern
+  /* custom Messages for this pattern */
   case class Done[T](task: T) extends Message
-  case class Result[T](result: T) extends Message
+  case object Ack extends Message
 }
 
 import akka.actor.{ Actor, Terminated, ActorLogging }
-import scala.util.Success
+import scala.util.{ Success, Failure }
 import scala.collection.mutable
 
 import WorkPulling._
@@ -59,7 +59,9 @@ class Master[T] extends Actor with ActorLogging {
           currentEpic = None
         }
     }
-    case Done(result) ⇒ sender ! Success(result)
+    case Done(result) ⇒
+      currentEpic = None //sender ! Success(result
+      sender ! Ack
   }
 }
 
@@ -82,11 +84,11 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
     case Work(work: T) ⇒
       doWork(work) onComplete {
         case Success(result) ⇒
-          log.info(s"Result:$result")
-          sender ! Done(result) // Need to wrap this later..
-          master ! GimmeWork
-        case _ ⇒ master ! GimmeWork
+          log.info("Work completed successfully.")
+          sender ! Done(result)
+        case Failure(ex) ⇒ log.info(ex.getMessage)
       }
+    case Ack ⇒ master ! GimmeWork
   }
 
   def isCompatible(someType: T): Boolean
