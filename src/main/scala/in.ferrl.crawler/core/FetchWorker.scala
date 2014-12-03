@@ -36,7 +36,7 @@ import NaiveCrawler._
 /**
  * Actor for getting http content
  */
-class FetchWorker(master: ActorRef) extends Worker[ggMessages](master) {
+class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
 
   import FetchWorker._
   import spray.client.pipelining._
@@ -46,12 +46,12 @@ class FetchWorker(master: ActorRef) extends Worker[ggMessages](master) {
 
   private val pipeline = sendReceive ~> unmarshal[Elements]
 
-  def isCompatible(someType: ggMessages): Boolean = someType match {
+  def isCompatible(someType: ggTask): Boolean = someType match {
     case Fetch(_, _, _) ⇒ true
     case _ ⇒ false
   }
 
-  def doWork(work: ggMessages): Future[_] = work match {
+  def doWork(work: ggTask): Future[_] = work match {
     case Fetch(url, _, _) ⇒
       def prepareUrl(url: String): Try[URL] = Try(new URL(url))
 

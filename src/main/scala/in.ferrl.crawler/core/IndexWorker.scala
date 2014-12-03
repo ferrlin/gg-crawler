@@ -5,12 +5,12 @@ import scala.concurrent.{ Future, future }
 import in.ferrl.crawler.pattern.Worker
 import NaiveCrawler._
 
-class IndexWorker(master: ActorRef) extends Worker[ggMessages](master) {
-  def isCompatible(someType: ggMessages) = someType match {
+class IndexWorker(master: ActorRef) extends Worker[ggTask](master) {
+  def isCompatible(someType: ggTask) = someType match {
     case Index(_) ⇒ true
     case _ ⇒ false
   }
-  def doWork(work: ggMessages): Future[_] = future {
+  def doWork(work: ggTask): Future[_] = future {
     // do nothing for now..
   }
 }
