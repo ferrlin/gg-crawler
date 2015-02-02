@@ -41,10 +41,11 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
   import FetchWorker._
   import spray.client.pipelining._
   import akka.util.Timeout
+  import com.levinotik.sprastic.client.SprasticClient
 
   implicit val timeout = Timeout(10 seconds)
 
-  private val pipeline = sendReceive ~> unmarshal[Elements]
+  private val pipeline = sendReceive //~> unmarshal[Elements]
 
   def isCompatible(someType: ggTask): Boolean = someType match {
     case Fetch(_, _, _) ⇒ true
@@ -52,7 +53,8 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
   }
 
   def doWork(work: ggTask): Future[_] = work match {
-    case Fetch(url, _, _) ⇒
+    case Fetch(url, depth, meta) ⇒
+
       def prepareUrl(url: String): Try[URL] = Try(new URL(url))
 
       def dropLastSlash(s: String): String = {
@@ -63,9 +65,10 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
       prepareUrl(url) match {
         case Success(url: URL) ⇒
           log.info("Requesting to get content of $url..")
-          pipeline(Get(url.toString))
-        // Future { log.warning("Hello, Im not using spray-client") }
-        // case Failure(ex) ⇒ Future.failed[String](new IllegalArgumentException(ex.getMessage))
+          val content = pipeline(Get(url.toString))
+          // save the content to elastic search
+          val Promise(id) = SprasticContext(context) ? Add(url, depth, meta, content)
+          FetchComplete(id)
         case Failure(ex) ⇒ future { log.error(ex.getMessage) }
       }
     case _ ⇒ future {

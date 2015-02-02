@@ -61,8 +61,11 @@ class Master[T] extends Actor with ActorLogging {
     }
     case Done(result) ⇒
       currentEpic = None //sender ! Success(result
+      wrapUp(result)
       sender ! Ack
   }
+
+  def wrapUp(result: T)
 }
 
 import scala.concurrent.Future

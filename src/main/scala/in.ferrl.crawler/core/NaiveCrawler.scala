@@ -25,4 +25,19 @@ object NaiveCrawler {
 
 import NaiveCrawler._
 
-class NaiveCrawler extends Master[ggTask] {}
+class NaiveCrawler extends Master[ggTask] {
+
+  def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
+
+  override def wrapUp(result: ggTask) = {
+    result match {
+      case ParseComplete(id) ⇒
+        log.info("Parsing completed..")
+        self ! newEpic(Index(id))
+      case FetchComplete(id) ⇒
+        log.info("Fetch completed..")
+        self ! newEpic(Parse(id))
+      case IndexComplete(id) ⇒ log.info("Index completed..")
+    }
+  }
+}
