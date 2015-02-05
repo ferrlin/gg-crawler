@@ -3,7 +3,7 @@ package in.ferrl.crawler.core
 import akka.actor.{ ActorRef }
 import scala.concurrent.{ Future, future }
 import in.ferrl.crawler.pattern.Worker
-import NaiveCrawler._
+import gg.crawler._
 
 class IndexWorker(master: ActorRef) extends Worker[ggTask](master) {
   def isCompatible(someType: ggTask) = someType match {

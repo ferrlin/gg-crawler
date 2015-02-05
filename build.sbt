@@ -1,6 +1,6 @@
 name := "gg-crawler"
 
-version := "0.1"
+version := "0.2.0"
 
 crossScalaVersions := Seq("2.10.4", "2.11.5")
 
@@ -26,7 +26,7 @@ libraryDependencies ++= {
     "io.spray" %% "spray-client" % sprayV,
     "io.spray" %% "spray-routing" % sprayV,
     "io.argonaut" %% "argonaut" % argoV,
-    "com.notik" % "sprastic_2.11" % "0.1.0-SNAPSHOT",
+    "in.ferrl" %% "aktic" % "0.1.0",
     "com.github.scala-incubator.io" %% "scala-io-core" % sioV,
     "com.github.scala-incubator.io" %% "scala-io-file" % sioV,
     "org.apache.tika" % "tika-core" % tikaV,
@@ -35,7 +35,6 @@ libraryDependencies ++= {
     "org.xerial.snappy" % "snappy-java" % "1.0.5",
     "org.scala-lang" % "scala-reflect" % "2.10.2",
     "org.specs2" %% "specs2-core" % specs2V % "test",
-    //"io.spray" % "spray-testkit" % "1.2-20130712" % "test",
     "com.typesafe.akka" %% "akka-testkit" % akkaV % "test",
     "com.novocode" % "junit-interface" % "0.7" % "test->default",
     "io.kamon" %% "kamon-core" % konV,

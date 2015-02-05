@@ -1,4 +1,4 @@
-package in.ferrl.crawler.util
+package in.ferrl.crawler.parser
 
 import java.io.ByteArrayInputStream
 import org.apache.tika.metadata.Metadata
@@ -16,7 +16,7 @@ import org.apache.tika.sax.WriteOutContentHandler
 import scala.util.Try
 
 class TikaParser {
-  def parse(url: String, content: String): Try[Pair[String, Map[String, Any]]] = {
+  def parse(url: String, content: String): Try[Pair[String, List[(String, String)]]] = {
     val handler = new WriteOutContentHandler(-1)
     val metadata = new Metadata()
     val context = new ParseContext()
@@ -24,12 +24,10 @@ class TikaParser {
 
     Try {
       parser.parse(new ByteArrayInputStream(content.getBytes), handler, metadata, context)
-
       val parsedMetadata = List(
-        ("title" -> metadata.get(Metadata.TITLE)),
-        ("author" -> metadata.get(Metadata.CREATOR)))
+        ("title" -> metadata.get(Metadata.TITLE).toString),
+        ("author" -> metadata.get(Metadata.CREATOR).toString))
         .filter { case (k, v) ⇒ v != null }
-        .toMap
 
       Pair(handler.toString(), parsedMetadata)
     }

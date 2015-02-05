@@ -11,7 +11,6 @@ object Main extends App {
 
   def start() {
 
-    import NaiveCrawler._
     import akka.util.Timeout
     import scala.concurrent.duration._
 
