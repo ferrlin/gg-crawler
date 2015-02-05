@@ -4,9 +4,12 @@ import akka.actor.ActorRef
 import scala.collection.IterableLike
 
 object WorkPulling {
-  sealed trait Message
   trait Epic[T] extends Iterable[T]
+
+  sealed trait Message
   case object GimmeWork extends Message
+  // below will override above message
+  // case object GetWork extends Message
   case object CurrentlyBusy extends Message
   case class WorkAvailable[T](someType: T) extends Message
   case class RegisterWorker(worker: ActorRef) extends Message
@@ -27,14 +30,15 @@ class Master[T] extends Actor with ActorLogging {
   val workers = mutable.Set.empty[ActorRef]
   var currentEpic: Option[Epic[T]] = None
 
-  def receive = {
+  def receive: Receive = {
     case epic: Epic[T] ⇒
       if (currentEpic.isDefined) {
-        log.info("Master Actor is busy")
+        log.info("Master actor is busy")
         sender ! CurrentlyBusy
-      } else if (workers.isEmpty)
+      } else if (workers.isEmpty) {
+        // When master is initialized, it should have at least one work registered
         log.error("Got work but there are no workers registered.")
-      else {
+      } else {
         currentEpic = Some(epic)
         // workers foreach { _ ! WorkAvailable }
         workers foreach { w ⇒ epic.iterator.foreach { w ! WorkAvailable(_) } }
@@ -48,14 +52,14 @@ class Master[T] extends Actor with ActorLogging {
       workers.remove(worker)
     case GimmeWork ⇒ currentEpic match {
       case None ⇒
-        log.info("workers asked for work but we've no more work to do")
+        log.info("Worker asked for work but no more work is available.")
       case Some(epic) ⇒
         val iter = epic.iterator
         if (iter.hasNext) {
           log.info("Send work to worker from master..")
           sender ! Work(iter.next)
         } else {
-          log.info(s"done with current epic $epic")
+          log.info(s"Done with current epic $epic")
           currentEpic = None
         }
     }
@@ -83,7 +87,7 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
 
   def receive = {
     case WorkAvailable(someType: T) ⇒
-      if (isCompatible(someType)) master ! GimmeWork
+      if (isCompatible(someType)) master ! GimmeWork // 
     case Work(work: T) ⇒
       doWork(work) onComplete {
         case Success(result) ⇒

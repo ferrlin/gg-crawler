@@ -32,19 +32,17 @@ object Main extends App {
     // naive ! newEpic(GET("http://ferrl.in"))
 
     import scala.concurrent.ExecutionContext.Implicits.global
+    import gg.crawler._
 
     // Use this pattern if you're interest in the result
     // where you're waiting for it before saying it done.
     // val f = naive ? newEpic(GET("http://ferrl.in"))
-    val f = master ! newEpic(Fetch(url = "http://ferrl.in", depth = 1, metadata = Map.empty))
+    master ! newEpic(Fetch(url = "http://ferrl.in", depth = 1, metadata = List.empty))
 
     /*    f onSuccess {
       case Result(r) ⇒ println(s"The result is $r")
     }*/
 
-    // statement to expect a response after sending a crawl message
-    // naive ? GET("http://ferrl.in")
-    // Thread.sleep(3000)
     // ggSystem.shutdown()
   }
 }

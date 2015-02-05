@@ -1,8 +1,8 @@
 package in.ferrl.crawler.dto
 
-case class FetchedData(url: String, depth: Int, meta: List[(String, String)], content: String)
+case class FetchedData(url: String, depth: Int, meta: List[(String, String)], content: List[String])
 case class ParsedData(url: String, meta: List[(String, String)])
-case class IndexedData(url: String, meta: List[(String, String)], content: String)
+case class IndexedData(url: String, meta: List[(String, String)], content: List[String])
 
 import argonaut._, Argonaut._
 import scala.concurrent.Future

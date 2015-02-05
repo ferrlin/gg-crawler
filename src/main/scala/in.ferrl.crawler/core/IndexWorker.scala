@@ -5,7 +5,7 @@ import scala.concurrent.{ Future, future }
 import in.ferrl.crawler.pattern.Worker
 import gg.crawler._
 
-class IndexWorker(master: ActorRef) extends Worker[ggTask](master) {
+/*class IndexWorker(master: ActorRef) extends Worker[ggTask](master) {
   def isCompatible(someType: ggTask) = someType match {
     case Index(_) ⇒ true
     case _ ⇒ false
@@ -14,3 +14,4 @@ class IndexWorker(master: ActorRef) extends Worker[ggTask](master) {
     // do nothing for now..
   }
 }
+*/ 
