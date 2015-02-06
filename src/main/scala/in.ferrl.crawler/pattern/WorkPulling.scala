@@ -38,7 +38,7 @@ trait WorkOwnership[T] {
 trait WorkManager[T] extends WorkOwnership[T] { this: Actor with ActorLogging ⇒
   val workers = mutable.Set.empty[ActorRef]
 
-  override def compose = workHandler andThen workerHandler
+  override def compose = workHandler orElse workerHandler
 
   override def workHandler: Receive = {
     case epic: Epic[T] ⇒
