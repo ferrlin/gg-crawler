@@ -9,7 +9,7 @@ import java.net.URL
 import akka.actor.{ Actor, ActorRef }
 import scala.concurrent.duration._
 import in.ferrl.crawler.pattern.Worker
-import in.ferrl.crawler.pattern.Master._
+import in.ferrl.crawler.pattern.WorkPulling._
 import gg.crawler._
 
 /**

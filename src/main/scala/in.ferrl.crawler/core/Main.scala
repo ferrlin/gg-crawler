@@ -3,7 +3,7 @@ package in.ferrl.crawler.core
 import akka.actor.{ Props, ActorSystem }
 import scala.util.Success
 import akka.pattern.ask
-import in.ferrl.crawler.pattern.Master._
+import in.ferrl.crawler.pattern.WorkPulling._
 
 object Main extends App {
 

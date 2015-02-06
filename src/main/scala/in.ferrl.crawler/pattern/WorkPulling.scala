@@ -3,7 +3,7 @@ package in.ferrl.crawler.pattern
 import akka.actor.ActorRef
 import scala.collection.IterableLike
 
-object Master {
+object WorkPulling {
   trait Epic[T] extends Iterable[T]
 
   sealed trait Message
@@ -22,14 +22,16 @@ object Master {
 import akka.actor.{ Actor, Terminated, ActorLogging }
 import scala.util.{ Success, Failure }
 import scala.collection.mutable
-import Master._
+import WorkPulling._
 
-class Master[T] extends Actor with ActorLogging {
+trait Master[T] extends Actor with ActorLogging {
 
   val workers = mutable.Set.empty[ActorRef]
   var currentEpic: Option[Epic[T]] = None
 
-  def receive: Receive = {
+  def receive = coreHandler andThen extendedHandler
+
+  def coreHandler: Receive = {
     case epic: Epic[T] ⇒
       if (currentEpic.isDefined) {
         log.info("Master actor is busy")
@@ -68,6 +70,8 @@ class Master[T] extends Actor with ActorLogging {
       sender ! Ack
     case WrapUp(result) ⇒ // should be handled by implementing actors
   }
+
+  def extendedHandler: Receive
 }
 
 import scala.concurrent.Future
