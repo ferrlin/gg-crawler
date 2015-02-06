@@ -28,3 +28,15 @@ class NaiveCrawler extends Master[ggTask] {
     }
   }
 }
+
+object NaiveCrawler {
+  def props = Props[NaiveCrawler]
+}
+
+/*class StandardCrawler extends MasterNG[ggTask] {
+
+}
+
+object StandardCrawler {
+  def props = Props[StandardCrawler]
+}*/

@@ -1,6 +1,6 @@
 name := "gg-crawler"
 
-version := "0.2.0"
+version := "0.3.0"
 
 crossScalaVersions := Seq("2.10.4", "2.11.5")
 
@@ -17,7 +17,7 @@ libraryDependencies ++= {
   val sioV = "0.4.3"
   val konV = "0.3.2"
   val tikaV = "1.6"
-  val specs2V = "2.4.15"
+  val testV = "2.2.1"
   val argoV = "6.0.4"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaV,
@@ -34,8 +34,8 @@ libraryDependencies ++= {
     "com.datastax.cassandra" % "cassandra-driver-core" % "1.0.1" exclude ("org.xerial.snappy", "snappy-java"),
     "org.xerial.snappy" % "snappy-java" % "1.0.5",
     "org.scala-lang" % "scala-reflect" % "2.10.2",
-    "org.specs2" %% "specs2-core" % specs2V % "test",
     "com.typesafe.akka" %% "akka-testkit" % akkaV % "test",
+    "org.scalatest" %% "scalatest" % testV % "test",
     "com.novocode" % "junit-interface" % "0.7" % "test->default",
     "io.kamon" %% "kamon-core" % konV,
     "io.kamon" %% "kamon-spray" % konV,

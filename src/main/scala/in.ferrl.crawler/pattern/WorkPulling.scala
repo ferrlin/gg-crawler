@@ -8,9 +8,12 @@ object WorkPulling {
 
   sealed trait Message
   case object GimmeWork extends Message
+  // RequestWork to change GimmeWork 
+  case object RequestWork extends Message
   case object CurrentlyBusy extends Message
   case class WorkAvailable[T](someType: T) extends Message
   case class RegisterWorker(worker: ActorRef) extends Message
+  case class UnregisterWorker(worker: ActorRef) extends Message
   case class Work[T](work: T) extends Message
 
   /* custom Messages for this pattern */
@@ -23,6 +26,68 @@ import akka.actor.{ Actor, Terminated, ActorLogging }
 import scala.util.{ Success, Failure }
 import scala.collection.mutable
 import WorkPulling._
+
+trait WorkOwnership[T] {
+  var currentEpic: Option[Epic[T]] = None
+
+  def workHandler: Actor.Receive
+
+  def compose: Actor.Receive
+}
+
+trait WorkManager[T] extends WorkOwnership[T] { this: Actor with ActorLogging ⇒
+  val workers = mutable.Set.empty[ActorRef]
+
+  override def compose = workHandler andThen workerHandler
+
+  override def workHandler: Receive = {
+    case epic: Epic[T] ⇒
+      if (currentEpic.isDefined) {
+        log.info("Master is busy.")
+        sender ! CurrentlyBusy
+      } else if (workers.isEmpty) {
+        log.error("Work is available but no workers are registered.")
+      } else {
+        currentEpic = Some(epic)
+        workers foreach { w ⇒ epic.iterator.foreach { w ! WorkAvailable(_) } }
+      }
+  }
+
+  def workerHandler: Receive = {
+    case RegisterWorker(worker) ⇒
+      log.info(s"New worker $worker registered")
+      context.watch(worker)
+      workers += worker
+    case UnregisterWorker(worker) ⇒
+      log.info(s"Unregistering worker $worker")
+      context.unwatch(worker)
+      workers.remove(worker)
+    case Terminated(worker) ⇒
+      log.info(s"Worker $worker died - taking off from worker's pool")
+      workers.remove(worker)
+    case RequestWork ⇒ currentEpic match {
+      case None ⇒
+        log.info("Worker asked for work but none is available.")
+      case Some(epic) ⇒
+        val iter = epic.iterator
+        if (iter.hasNext) {
+          log.info("Send work to requesting worker")
+          sender ! Work(iter.next)
+        } else {
+          log.info(s"Refresh current epic")
+          currentEpic = None
+        }
+    }
+  }
+
+}
+
+trait MasterNG[T] extends Actor with ActorLogging { this: WorkOwnership[T] ⇒
+
+  def receive = compose andThen customHandler
+
+  def customHandler: Receive
+}
 
 trait Master[T] extends Actor with ActorLogging {
 
@@ -65,7 +130,6 @@ trait Master[T] extends Actor with ActorLogging {
         }
     }
   }
-
   def extendedHandler: Receive
 }
 
