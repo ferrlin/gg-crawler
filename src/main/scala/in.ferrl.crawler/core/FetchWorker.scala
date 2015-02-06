@@ -4,12 +4,12 @@ import spray.http.HttpEntity
 import spray.http.HttpRequest
 import spray.httpx.unmarshalling.{ MalformedContent, Unmarshaller, Deserialized }
 import scala.util.{ Try, Success, Failure }
-import scala.concurrent.{ Future, future }
+import scala.concurrent.{ Future, future, Promise }
 import java.net.URL
 import akka.actor.{ Actor, ActorRef }
 import scala.concurrent.duration._
 import in.ferrl.crawler.pattern.Worker
-import in.ferrl.crawler.pattern.WorkPulling._
+import in.ferrl.crawler.pattern.Master._
 import gg.crawler._
 
 /**
@@ -63,17 +63,20 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
       prepareUrl(url) match {
         case Success(url: URL) ⇒
           log.info(s"Requesting to get content of $url..")
-          val content = pipeline(Get(url.toString))
-          // Let's just ignore the response
-          // content map {
-          esDTO.insertFetched(FetchedData(url.toString, depth, meta, _))
+          // val content = pipeline(Get(url.toString))
+          pipeline(Get(url.toString)) map { content ⇒
+            esDTO.insertFetched(FetchedData(url.toString, depth, meta, content))
+          }
+        // Let's just ignore the response
+        // content map {
+        // esDTO.insertFetched(FetchedData(url.toString, depth, meta, _))
         // }
         // save the content to elastic search
         // val Promise(id) = SprasticContext(context) ? Add(url, depth, meta, content)
         // master ! FetchComplete(id)
-        case Failure(ex) ⇒ future { log.error(ex.getMessage) }
+        case Failure(ex) ⇒ Future { log.error(ex.getMessage) }
       }
-    case _ ⇒ future {
+    case _ ⇒ Future {
       // do nothing
     }
   }

@@ -12,7 +12,8 @@ object implicits {
     jencode4L((f: FetchedData) ⇒ (f.url, f.depth, f.meta, f.content))("url", "depth", "meta", "content")
 
   implicit def MetaDataEncodeJson: EncodeJson[List[(String, String)]] =
-    EncodeJson { case List((k, v)) ⇒ Json.obj(k -> v) }
+    EncodeJson { case List((k, v)) ⇒ Json.obj(k -> jString(v)) }
+  // EncodeJson{ case List((k,v)) => }
 
   implicit def ParsedDataEncodeJson: EncodeJson[ParsedData] =
     jencode2L((p: ParsedData) ⇒ (p.url, p.meta))("url", "meta")

@@ -2,6 +2,7 @@ package in.ferrl.crawler.parser
 
 import java.io.ByteArrayInputStream
 import org.apache.tika.metadata.Metadata
+import org.apache.tika.metadata.TikaCoreProperties
 import org.apache.tika.parser.{ AutoDetectParser, ParseContext, Parser }
 import org.apache.tika.parser.audio.AudioParser
 import org.apache.tika.parser.html.HtmlParser
@@ -16,7 +17,7 @@ import org.apache.tika.sax.WriteOutContentHandler
 import scala.util.Try
 
 class TikaParser {
-  def parse(url: String, content: String): Try[Pair[String, List[(String, String)]]] = {
+  def parse(url: String, content: String): Try[(String, List[(String, String)])] = {
     val handler = new WriteOutContentHandler(-1)
     val metadata = new Metadata()
     val context = new ParseContext()
@@ -25,11 +26,11 @@ class TikaParser {
     Try {
       parser.parse(new ByteArrayInputStream(content.getBytes), handler, metadata, context)
       val parsedMetadata = List(
-        ("title" -> metadata.get(Metadata.TITLE).toString),
-        ("author" -> metadata.get(Metadata.CREATOR).toString))
+        ("title" -> metadata.get(TikaCoreProperties.TITLE)),
+        ("authoer" -> metadata.get(TikaCoreProperties.CREATOR)))
         .filter { case (k, v) ⇒ v != null }
 
-      Pair(handler.toString(), parsedMetadata)
+      (handler.toString(), parsedMetadata)
     }
   }
 

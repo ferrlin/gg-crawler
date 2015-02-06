@@ -3,27 +3,26 @@ package in.ferrl.crawler.pattern
 import akka.actor.ActorRef
 import scala.collection.IterableLike
 
-object WorkPulling {
+object Master {
   trait Epic[T] extends Iterable[T]
 
   sealed trait Message
   case object GimmeWork extends Message
-  // below will override above message
-  // case object GetWork extends Message
   case object CurrentlyBusy extends Message
   case class WorkAvailable[T](someType: T) extends Message
   case class RegisterWorker(worker: ActorRef) extends Message
   case class Work[T](work: T) extends Message
+
   /* custom Messages for this pattern */
-  case class Done[T](task: T) extends Message
+  case class Done[T](task: T, target: ActorRef) extends Message
+  case class WrapUp[T](task: T) extends Message
   case object Ack extends Message
 }
 
 import akka.actor.{ Actor, Terminated, ActorLogging }
 import scala.util.{ Success, Failure }
 import scala.collection.mutable
-
-import WorkPulling._
+import Master._
 
 class Master[T] extends Actor with ActorLogging {
 
@@ -63,13 +62,12 @@ class Master[T] extends Actor with ActorLogging {
           currentEpic = None
         }
     }
-    case Done(result) ⇒
-      currentEpic = None //sender ! Success(result
-      wrapUp(result)
+    case Done(result, target) ⇒
+      currentEpic = None
+      target ! WrapUp(result)
       sender ! Ack
+    case WrapUp(result) ⇒ // should be handled by implementing actors
   }
-
-  def wrapUp(result: T)
 }
 
 import scala.concurrent.Future
@@ -87,12 +85,12 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
 
   def receive = {
     case WorkAvailable(someType: T) ⇒
-      if (isCompatible(someType)) master ! GimmeWork // 
+      if (isCompatible(someType)) master ! GimmeWork
     case Work(work: T) ⇒
       doWork(work) onComplete {
         case Success(result) ⇒
           log.info("Work completed successfully.")
-          sender ! Done(result)
+          sender ! Done(result, master)
         case Failure(ex) ⇒ log.info(ex.getMessage)
       }
     case Ack ⇒ master ! GimmeWork
@@ -100,5 +98,5 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
 
   def isCompatible(someType: T): Boolean
 
-  def doWork(work: T): Future[_]
+  def doWork(work: T): Future[Any]
 }
