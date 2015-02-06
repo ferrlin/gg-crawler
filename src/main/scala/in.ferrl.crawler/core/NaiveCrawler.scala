@@ -12,6 +12,10 @@ class NaiveCrawler extends Master[ggTask] {
   def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
 
   override def extendedHandler: Receive = {
+    case Done(result, target) ⇒
+      currentEpic = None
+      target ! WrapUp(result)
+      sender ! Ack
     case WrapUp(result) ⇒ result match {
       case ParseComplete(id) ⇒
         log.info("Parsing completed..")

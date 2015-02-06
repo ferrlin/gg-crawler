@@ -64,11 +64,6 @@ trait Master[T] extends Actor with ActorLogging {
           currentEpic = None
         }
     }
-    case Done(result, target) ⇒
-      currentEpic = None
-      target ! WrapUp(result)
-      sender ! Ack
-    case WrapUp(result) ⇒ // should be handled by implementing actors
   }
 
   def extendedHandler: Receive
