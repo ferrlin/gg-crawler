@@ -82,55 +82,11 @@ trait WorkManager[T] extends WorkOwnership[T] { this: Actor with ActorLogging �
 
 }
 
-trait MasterNG[T] extends Actor with ActorLogging { this: WorkOwnership[T] ⇒
+trait Master[T] extends Actor with ActorLogging { this: WorkOwnership[T] ⇒
 
   def receive = compose andThen customHandler
 
   def customHandler: Receive
-}
-
-trait Master[T] extends Actor with ActorLogging {
-
-  val workers = mutable.Set.empty[ActorRef]
-  var currentEpic: Option[Epic[T]] = None
-
-  def receive = coreHandler andThen extendedHandler
-
-  def coreHandler: Receive = {
-    case epic: Epic[T] ⇒
-      if (currentEpic.isDefined) {
-        log.info("Master actor is busy")
-        sender ! CurrentlyBusy
-      } else if (workers.isEmpty) {
-        // When master is initialized, it should have at least one work registered
-        log.error("Got work but there are no workers registered.")
-      } else {
-        currentEpic = Some(epic)
-        // workers foreach { _ ! WorkAvailable }
-        workers foreach { w ⇒ epic.iterator.foreach { w ! WorkAvailable(_) } }
-      }
-    case RegisterWorker(worker) ⇒
-      log.info(s"worker $worker registered")
-      context.watch(worker)
-      workers += worker
-    case Terminated(worker) ⇒
-      log.info(s"worker $worker died - taking off the set of workers")
-      workers.remove(worker)
-    case GimmeWork ⇒ currentEpic match {
-      case None ⇒
-        log.info("Worker asked for work but no more work is available.")
-      case Some(epic) ⇒
-        val iter = epic.iterator
-        if (iter.hasNext) {
-          log.info("Send work to worker from master..")
-          sender ! Work(iter.next)
-        } else {
-          log.info(s"Done with current epic $epic")
-          currentEpic = None
-        }
-    }
-  }
-  def extendedHandler: Receive
 }
 
 import scala.concurrent.Future

@@ -3,15 +3,14 @@ package in.ferrl.crawler.core
 import akka.actor.{ Actor, Props }
 import akka.util.Timeout
 import akka.event.Logging
-import in.ferrl.crawler.pattern.Master
+import in.ferrl.crawler.pattern.{ Master, WorkManager }
 import in.ferrl.crawler.pattern.WorkPulling._
 import gg.crawler._
 
-class NaiveCrawler extends Master[ggTask] {
+class StandardCrawler extends WorkManager[ggTask] with Master[ggTask] {
+  import StandardCrawler._
 
-  def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
-
-  override def extendedHandler: Receive = {
+  override def customHandler: Receive = {
     case Done(result, target) ⇒
       currentEpic = None
       target ! WrapUp(result)
@@ -29,14 +28,9 @@ class NaiveCrawler extends Master[ggTask] {
   }
 }
 
-object NaiveCrawler {
-  def props = Props[NaiveCrawler]
-}
-
-/*class StandardCrawler extends MasterNG[ggTask] {
-
-}
-
 object StandardCrawler {
+
+  def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
+
   def props = Props[StandardCrawler]
-}*/
+}
