@@ -22,6 +22,7 @@ class WorkOwnershipSpec extends TestKit(ActorSystem("WorkOwnershipSpec"))
   with BeforeAndAfterAll {
 
   import in.ferrl.crawler.pattern.WorkPulling._
+  import akka.testkit.TestProbe
 
   "WorkOwnership" should {
     "allow us to register a worker" in {
@@ -37,12 +38,25 @@ class WorkOwnershipSpec extends TestKit(ActorSystem("WorkOwnershipSpec"))
     }
     // This should be in the integration test
     "allows worker to request work" in {
-      val real = TestActorRef[TestWorkOwnershipWithWorkerHandler].underlyingActor
-      real.receive(RequestWork)
+      val worker1 = TestProbe()
+      val actor = system.actorOf(Props[TestWorkOwnership[ggTask]])
+
+      def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
+      val work = Fetch(url = "http://ferrl.in", depth = 1, metadata = List.empty)
+
+      // default behavior by worker on prestart
+      actor ! RegisterWorker(worker1.ref)
+      actor ! RequestWorkBy(worker1.ref)
+
+      // send new work
+      actor ! newEpic(work)
+
+      // when work is available
+      actor ! RequestWorkBy(worker1.ref)
 
       // if(real.currentEpic)
-      // TODO:how to test ..
     }
+
     "allow us to send work" in {
       val real = TestActorRef[TestWorkOwnership[ggTask]].underlyingActor
       def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
@@ -50,7 +64,7 @@ class WorkOwnershipSpec extends TestKit(ActorSystem("WorkOwnershipSpec"))
       real.receive(RegisterWorker(testActor))
       real.receive(newEpic(work))
       // TODO: fix this..
-      // real.currentEpic must be(Some(work))
+      real.currentEpic must be(Some(work))
     }
   }
 

@@ -22,7 +22,6 @@ object Main extends App {
 
     def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
 
-    // val master = ggSystem.actorOf(Props[NaiveCrawler], "master")
     val master = ggSystem.actorOf(StandardCrawler.props, "master")
     val getter = ggSystem.actorOf(Props(new FetchWorker(master)), "worker-1")
 
