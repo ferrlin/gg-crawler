@@ -63,17 +63,12 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
       prepareUrl(url) match {
         case Success(url: URL) ⇒
           log.info(s"Requesting to get content of $url..")
-          // val content = pipeline(Get(url.toString))
-          pipeline(Get(url.toString)) map { content ⇒
+          val result = pipeline(Get(url.toString)) flatMap { content ⇒
             esDTO.insertFetched(FetchedData(url.toString, depth, meta, content))
           }
-        // Let's just ignore the response
-        // content map {
-        // esDTO.insertFetched(FetchedData(url.toString, depth, meta, _))
-        // }
-        // save the content to elastic search
-        // val Promise(id) = SprasticContext(context) ? Add(url, depth, meta, content)
-        // master ! FetchComplete(id)
+          log.info(s"The result after fetch is -> $result")
+          result
+        // parse result to json to extract #id
         case Failure(ex) ⇒ Future { log.error(ex.getMessage) }
       }
     case _ ⇒ Future {

@@ -7,9 +7,12 @@ package object gg {
     sealed trait ggTask
     case class Fetch(url: String, depth: Int, metadata: List[(String, String)]) extends ggTask
     case class FetchComplete(id: String) extends ggTask
+    case object FetchFailed extends ggTask
     case class Parse(id: String) extends ggTask
     case class ParseComplete(id: String) extends ggTask
+    case object ParseFailed extends ggTask
     case class Index(id: String) extends ggTask
     case class IndexComplete(id: String) extends ggTask
+    case object IndexFailed extends ggTask
   }
 }

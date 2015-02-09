@@ -44,6 +44,7 @@ object esDTO {
     prepare(indexedData.asJson.toString)(indexedDocPath)
 
   private[this] def prepare(strJson: String)(path: DocPath) = {
+    println(s"The strJons $strJson")
     client.index(None, strJson)(path)
   }
 }

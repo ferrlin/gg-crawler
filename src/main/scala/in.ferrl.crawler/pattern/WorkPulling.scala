@@ -15,8 +15,7 @@ object WorkPulling {
   case class Work[T](work: T) extends Message
 
   /* custom Messages for this pattern */
-  case class Done[T](task: T, target: ActorRef) extends Message
-  case class WrapUp[T](task: T) extends Message
+  case class Done[T](task: T) extends Message
   case object Ack extends Message
 }
 
@@ -36,9 +35,9 @@ trait WorkOwnership[T] {
 trait WorkManager[T] extends WorkOwnership[T] { this: Actor with ActorLogging ⇒
   val workers = mutable.Set.empty[ActorRef]
 
-  override def compose = workHandler orElse workerHandler
+  override def compose: Receive = workHandler orElse workerHandler
 
-  override def workHandler: Receive = {
+  override def workHandler: PartialFunction[Any, Unit] = {
     case epic: Epic[T] ⇒
       if (currentEpic.isDefined) {
         log.info("Master is busy.")
@@ -51,18 +50,18 @@ trait WorkManager[T] extends WorkOwnership[T] { this: Actor with ActorLogging �
       }
   }
 
-  def workerHandler: Receive = {
+  def workerHandler: PartialFunction[Any, Unit] = {
     case RegisterWorker(worker) ⇒
-      log.info(s"New worker $worker registered")
       context.watch(worker)
       workers += worker
+      log.info(s"New worker $worker registered")
     case UnregisterWorker(worker) ⇒
-      log.info(s"Unregistering worker $worker")
       context.unwatch(worker)
       workers.remove(worker)
+      log.info(s"Unregistering worker $worker")
     case Terminated(worker) ⇒
-      log.info(s"Worker $worker died - taking off from worker's pool")
       workers.remove(worker)
+      log.info(s"Worker $worker died - taking off from worker's pool")
     case RequestWorkBy(worker) ⇒ currentEpic match {
       case None ⇒
         log.info("Worker asked for work but none is available.")
@@ -77,14 +76,6 @@ trait WorkManager[T] extends WorkOwnership[T] { this: Actor with ActorLogging �
         }
     }
   }
-
-}
-
-trait Master[T] extends Actor with ActorLogging { this: WorkOwnership[T] ⇒
-
-  def receive = compose andThen customHandler
-
-  def customHandler: Receive
 }
 
 import scala.concurrent.Future
@@ -112,7 +103,7 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
       doWork(work) onComplete {
         case Success(result) ⇒
           log.info("Work completed successfully.")
-          sender ! Done(result, master)
+          master ! Done(result)
         case Failure(ex) ⇒ log.info(ex.getMessage)
       }
     case Ack ⇒ requestWork()

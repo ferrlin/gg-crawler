@@ -48,6 +48,8 @@ class WorkOwnershipSpec extends TestKit(ActorSystem("WorkOwnershipSpec"))
       actor ! RegisterWorker(worker1.ref)
       actor ! RequestWorkBy(worker1.ref)
 
+      // actor.expectMsg(500 millis, CurrentlyBusy)
+
       // send new work
       actor ! newEpic(work)
 
