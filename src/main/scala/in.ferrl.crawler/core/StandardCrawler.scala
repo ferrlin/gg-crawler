@@ -13,17 +13,20 @@ class StandardCrawler extends Actor with ActorLogging with WorkManager[ggTask] {
   def receive = compose orElse customHandler
 
   def customHandler: PartialFunction[Any, Unit] = {
-    case Done(result) ⇒
-      currentEpic = None
-      self ! result
-      sender ! Ack
     case ParseComplete(id) ⇒
       log.info("Parsing completed..")
       self ! newEpic(Index(id))
+      houseKeeping()
     case FetchComplete(id) ⇒
       log.info("Fetch completed..")
       self ! newEpic(Parse(id))
+      houseKeeping()
     case IndexComplete(id) ⇒ log.info("Index completed..")
+  }
+
+  def houseKeeping() {
+    currentEpic = None
+    sender ! Ack
   }
 }
 

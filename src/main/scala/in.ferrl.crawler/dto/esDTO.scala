@@ -34,13 +34,15 @@ object esDTO {
 
   val client = Aktic()
 
-  def insertParsed(parsedData: ParsedData): Future[String] =
+  type ResultId = String
+
+  def insertParsed(parsedData: ParsedData): Future[ResultId] =
     prepare(parsedData.asJson.toString)(parsedDocPath)
 
-  def insertFetched(fetchedData: FetchedData): Future[String] =
+  def insertFetched(fetchedData: FetchedData): Future[ResultId] =
     prepare(fetchedData.asJson.toString)(fetchedDocPath)
 
-  def insertIndexed(indexedData: IndexedData): Future[String] =
+  def insertIndexed(indexedData: IndexedData): Future[ResultId] =
     prepare(indexedData.asJson.toString)(indexedDocPath)
 
   private[this] def prepare(strJson: String)(path: DocPath) = {

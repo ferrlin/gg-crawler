@@ -50,9 +50,8 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
     case _ ⇒ false
   }
 
-  def doWork(work: ggTask): Future[_] = work match {
-    case Fetch(url, depth, meta) ⇒
-
+  override def customHandler = {
+    case Fetch(url, depth, meta) ⇒ {
       def prepareUrl(url: String): Try[URL] = Try(new URL(url))
 
       def dropLastSlash(s: String): String = {
@@ -63,16 +62,20 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
       prepareUrl(url) match {
         case Success(url: URL) ⇒
           log.info(s"Requesting to get content of $url..")
-          val result = pipeline(Get(url.toString)) flatMap { content ⇒
+          pipeline(Get(url.toString)) flatMap { content ⇒
             esDTO.insertFetched(FetchedData(url.toString, depth, meta, content))
+          } onComplete {
+            case Success(fetchedId) ⇒
+              log.info(s"The result after fetch is -> $fetchedId")
+              master ! FetchComplete(fetchedId)
+            case Failure(err) ⇒
+              log.error(err.getMessage)
+              master ! FetchFailed
           }
-          log.info(s"The result after fetch is -> $result")
-          result
-        // parse result to json to extract #id
-        case Failure(ex) ⇒ Future { log.error(ex.getMessage) }
+        case Failure(ex) ⇒
+          log.error(ex.getMessage)
+          master ! FetchFailed
       }
-    case _ ⇒ Future {
-      // do nothing
     }
   }
 }

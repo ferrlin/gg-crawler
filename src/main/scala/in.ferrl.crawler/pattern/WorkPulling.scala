@@ -14,8 +14,7 @@ object WorkPulling {
   case class UnregisterWorker(worker: ActorRef) extends Message
   case class Work[T](work: T) extends Message
 
-  /* custom Messages for this pattern */
-  case class Done[T](task: T) extends Message
+  /* custom message */
   case object Ack extends Message
 }
 
@@ -96,20 +95,19 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
     master ! RequestWorkBy(self)
   }
 
-  def receive = {
-    case WorkAvailable(someType: T) ⇒
-      if (isCompatible(someType)) requestWork()
+  def receive = performWork orElse customHandler
+
+  def performWork: Receive = {
+    case WorkAvailable(someType: T) if isCompatible(someType) ⇒
+      requestWork()
     case Work(work: T) ⇒
-      doWork(work) onComplete {
-        case Success(result) ⇒
-          log.info("Work completed successfully.")
-          master ! Done(result)
-        case Failure(ex) ⇒ log.info(ex.getMessage)
-      }
+      log.info("Start working..")
+      self ! work
     case Ack ⇒ requestWork()
+    case _ ⇒ //do nothing
   }
 
   def isCompatible(someType: T): Boolean
 
-  def doWork(work: T): Future[Any]
+  def customHandler: PartialFunction[Any, Unit]
 }
