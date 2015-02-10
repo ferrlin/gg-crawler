@@ -46,7 +46,7 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
   val pipeline: HttpRequest ⇒ Future[Elements] = sendReceive ~> unmarshal[Elements]
 
   def isCompatible(someType: ggTask): Boolean = someType match {
-    case Fetch(_, _, _) ⇒ true
+    case fetch: Fetch ⇒ true
     case _ ⇒ false
   }
 
@@ -67,7 +67,8 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
           } onComplete {
             case Success(fetchedId) ⇒
               log.info(s"The result after fetch is -> $fetchedId")
-              master ! FetchComplete(fetchedId)
+              if (fetchedId.isEmpty) log.info("Inserted fetched result Id is empty.")
+              else master ! FetchComplete(fetchedId)
             case Failure(err) ⇒
               log.error(err.getMessage)
               master ! FetchFailed

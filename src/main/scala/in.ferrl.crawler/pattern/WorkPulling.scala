@@ -85,6 +85,8 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
 
   implicit val ec = context.dispatcher
 
+  def receive = performWork orElse customHandler
+
   override def preStart {
     master ! RegisterWorker(self)
 
@@ -94,8 +96,6 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
   def requestWork() {
     master ! RequestWorkBy(self)
   }
-
-  def receive = performWork orElse customHandler
 
   def performWork: Receive = {
     case WorkAvailable(someType: T) if isCompatible(someType) ⇒

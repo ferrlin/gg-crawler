@@ -22,6 +22,7 @@ object implicits {
 }
 
 object esDTO {
+  import scala.concurrent.ExecutionContext.Implicits.global
   import in.ferrl.aktic.core.DocPath
   import in.ferrl.aktic.Aktic
   import implicits._
@@ -45,8 +46,14 @@ object esDTO {
   def insertIndexed(indexedData: IndexedData): Future[ResultId] =
     prepare(indexedData.asJson.toString)(indexedDocPath)
 
+  lazy val object2IdLens = jObjectPL >=>
+    jsonObjectPL("_id") >=>
+    jStringPL
+
   private[this] def prepare(strJson: String)(path: DocPath) = {
     println(s"The strJons $strJson")
-    client.index(None, strJson)(path)
+    client.index(None, strJson)(path).map { res ⇒
+      object2IdLens.get(Parse.parseOption(res).get).getOrElse("")
+    }
   }
 }
