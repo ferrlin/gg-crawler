@@ -27,12 +27,11 @@ object esDTO {
   import in.ferrl.aktic.Aktic
   import implicits._
 
-  private val GG_INDEX = "gg"
+  private[esDTO] val GG_INDEX = "gg"
 
   val parsedDocPath = DocPath(GG_INDEX, "parsed")
   val fetchedDocPath = DocPath(GG_INDEX, "fetched")
   val indexedDocPath = DocPath(GG_INDEX, "indexed")
-
   val client = Aktic()
 
   type ResultId = String

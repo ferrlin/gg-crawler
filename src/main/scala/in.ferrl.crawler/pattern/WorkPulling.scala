@@ -7,7 +7,7 @@ object WorkPulling {
   trait Epic[T] extends Iterable[T]
 
   sealed trait Message
-  case class RequestWorkBy(worker: ActorRef) extends Message
+  case class GetWorkBy(worker: ActorRef) extends Message
   case object CurrentlyBusy extends Message
   case class WorkAvailable[T](someType: T) extends Message
   case class RegisterWorker(worker: ActorRef) extends Message
@@ -61,7 +61,7 @@ trait WorkManager[T] extends WorkOwnership[T] { this: Actor with ActorLogging �
     case Terminated(worker) ⇒
       workers.remove(worker)
       log.info(s"Worker $worker died - taking off from worker's pool")
-    case RequestWorkBy(worker) ⇒ currentEpic match {
+    case GetWorkBy(worker) ⇒ currentEpic match {
       case None ⇒
         log.info("Worker asked for work but none is available.")
       case Some(epic) ⇒
@@ -90,20 +90,20 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
   override def preStart {
     master ! RegisterWorker(self)
 
-    requestWork()
+    getWork()
   }
 
-  def requestWork() {
-    master ! RequestWorkBy(self)
+  def getWork() {
+    master ! GetWorkBy(self)
   }
 
   def performWork: Receive = {
     case WorkAvailable(someType: T) if isCompatible(someType) ⇒
-      requestWork()
+      getWork()
     case Work(work: T) ⇒
       log.info("Start working..")
       self ! work
-    case Ack ⇒ requestWork()
+    case Ack ⇒ getWork()
     case _ ⇒ //do nothing
   }
 
