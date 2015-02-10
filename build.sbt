@@ -33,7 +33,7 @@ libraryDependencies ++= {
     "org.apache.tika" % "tika-parsers" % tikaV,
     "com.datastax.cassandra" % "cassandra-driver-core" % "1.0.1" exclude ("org.xerial.snappy", "snappy-java"),
     "org.xerial.snappy" % "snappy-java" % "1.0.5",
-    "org.scala-lang" % "scala-reflect" % "2.10.2",
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value,
     "com.typesafe.akka" %% "akka-testkit" % akkaV % "test",
     "org.scalatest" %% "scalatest" % testV % "test",
     "com.novocode" % "junit-interface" % "0.7" % "test->default",
