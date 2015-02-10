@@ -8,7 +8,7 @@ import org.apache.tika.parser.audio.AudioParser
 import org.apache.tika.parser.html.HtmlParser
 import org.apache.tika.parser.image.ImageParser
 import org.apache.tika.parser.microsoft.OfficeParser
-import org.apache.tika.parser.opendocument.OpenOfficeParser
+import org.apache.tika.parser.odf.OpenDocumentParser
 import org.apache.tika.parser.pdf.PDFParser
 import org.apache.tika.parser.rtf.RTFParser
 import org.apache.tika.parser.txt.TXTParser
@@ -43,7 +43,7 @@ class TikaParser {
       case "xml" ⇒ new XMLParser()
       case "pdf" ⇒ new PDFParser()
       case "rtf" ⇒ new RTFParser()
-      case "odt" ⇒ new OpenOfficeParser()
+      case "odf" ⇒ new OpenDocumentParser()
       case "xls" | "xlsx" ⇒ new OfficeParser()
       case "doc" | "docx" ⇒ new OfficeParser()
       case "ppt" | "pptx" ⇒ new OfficeParser()
