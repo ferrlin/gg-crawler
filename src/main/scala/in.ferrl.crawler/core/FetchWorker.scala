@@ -35,7 +35,7 @@ object FetchWorker {
 /**
  * Actor for getting http content
  */
-class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
+class FetchWorker(master: ActorRef) extends Worker[Task](master) {
   import gg.crawler._
   import FetchWorker._
   import spray.client.pipelining._
@@ -43,15 +43,17 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
   import in.ferrl.crawler.dto._
 
   implicit val timeout = Timeout(5.seconds)
-  val pipeline: HttpRequest ⇒ Future[Elements] = sendReceive ~> unmarshal[Elements]
+  def sendAndReceive = sendReceive
 
-  def isCompatible(someType: ggTask): Boolean = someType match {
+  val pipeline: HttpRequest ⇒ Future[Elements] = sendAndReceive ~> unmarshal[Elements]
+
+  def isCompatible(someType: Task): Boolean = someType match {
     case fetch: Fetch ⇒ true
     case _ ⇒ false
   }
 
   override def customHandler = {
-    case Fetch(url, depth, meta) ⇒ {
+    case task @ Fetch(url, depth, meta) ⇒ {
       def prepareUrl(url: String): Try[URL] = Try(new URL(url))
 
       def dropLastSlash(s: String): String = {
@@ -61,21 +63,27 @@ class FetchWorker(master: ActorRef) extends Worker[ggTask](master) {
 
       prepareUrl(url) match {
         case Success(url: URL) ⇒
-          log.info(s"Requesting to get content of $url..")
-          pipeline(Get(url.toString)) flatMap { content ⇒
+          log.info(s"Fetching commences at url:$url")
+          pipeline(Get(url.toString)).onComplete {
+            case Success(result) ⇒
+              // log.info(s"The result after fetch is -> $result")
+              master ! Completed(task, "someId", result)
+              log.info("Fetching completed successfully.")
+            case Failure(e) ⇒ log.error(e.getMessage)
+          }
+        /*pipeline(Get(url.toString)) flatMap { content ⇒
             esDTO.insertFetched(FetchedData(url.toString, depth, meta, content))
           } onComplete {
             case Success(fetchedId) ⇒
               log.info(s"The result after fetch is -> $fetchedId")
-              if (fetchedId.isEmpty) log.info("Inserted fetched result Id is empty.")
-              else master ! FetchComplete(fetchedId)
+              if (!fetchedId.isEmpty) master ! Complete(f, fetchedId)
             case Failure(err) ⇒
-              log.error(err.getMessage)
-              master ! FetchFailed
-          }
+              log.error(err)
+              master ! Failed
+          }*/
         case Failure(ex) ⇒
           log.error(ex.getMessage)
-          master ! FetchFailed
+          master ! Failed
       }
     }
   }

@@ -5,7 +5,6 @@ import scala.collection.IterableLike
 
 object WorkPulling {
   trait Epic[T] extends Iterable[T]
-
   sealed trait Message
   case class GetWorkBy(worker: ActorRef) extends Message
   case object CurrentlyBusy extends Message
@@ -13,7 +12,6 @@ object WorkPulling {
   case class RegisterWorker(worker: ActorRef) extends Message
   case class UnregisterWorker(worker: ActorRef) extends Message
   case class Work[T](work: T) extends Message
-
   /* custom message */
   case object Ack extends Message
 }
@@ -25,9 +23,7 @@ import WorkPulling._
 
 trait WorkOwnership[T] {
   var currentEpic: Option[Epic[T]] = None
-
   def workHandler: Actor.Receive
-
   def compose: Actor.Receive
 }
 
@@ -44,6 +40,7 @@ trait WorkManager[T] extends WorkOwnership[T] { this: Actor with ActorLogging �
       } else if (workers.isEmpty) {
         log.error("Work is available but no workers are registered.")
       } else {
+        log.info("New work received.. Notifying workers")
         currentEpic = Some(epic)
         workers foreach { w ⇒ epic.iterator.foreach { w ! WorkAvailable(_) } }
       }
@@ -67,7 +64,7 @@ trait WorkManager[T] extends WorkOwnership[T] { this: Actor with ActorLogging �
       case Some(epic) ⇒
         val iter = epic.iterator
         if (iter.hasNext) {
-          log.info("Send work to requesting worker")
+          log.info(s"Send work to worker $worker")
           worker ! Work(iter.next)
         } else {
           log.info(s"Refresh current epic")
@@ -85,29 +82,20 @@ abstract class Worker[T: ClassTag](val master: ActorRef)(implicit manifest: Mani
 
   implicit val ec = context.dispatcher
 
-  def receive = performWork orElse customHandler
-
   override def preStart {
     master ! RegisterWorker(self)
-
     getWork()
   }
+  def receive = performWork orElse customHandler
 
   def getWork() {
     master ! GetWorkBy(self)
   }
-
   def performWork: Receive = {
-    case WorkAvailable(someType: T) if isCompatible(someType) ⇒
-      getWork()
-    case Work(work: T) ⇒
-      log.info("Start working..")
-      self ! work
+    case WorkAvailable(someType: T) if isCompatible(someType) ⇒ getWork()
+    case Work(work: T) ⇒ self ! work
     case Ack ⇒ getWork()
-    case _ ⇒ //do nothing
   }
-
   def isCompatible(someType: T): Boolean
-
   def customHandler: PartialFunction[Any, Unit]
 }

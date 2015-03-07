@@ -7,21 +7,28 @@ import in.ferrl.crawler.pattern.WorkManager
 import in.ferrl.crawler.pattern.WorkPulling._
 import gg.crawler._
 
-class StandardCrawler extends Actor with ActorLogging with WorkManager[ggTask] {
+class StandardCrawler extends Actor with ActorLogging with WorkManager[Task] {
   import StandardCrawler._
 
   def receive = compose orElse customHandler
 
   def customHandler: PartialFunction[Any, Unit] = {
-    case ParseComplete(id) ⇒
-      log.info("Parsing completed..")
-      self ! newEpic(Index(id))
-      houseKeeping()
-    case FetchComplete(id) ⇒
-      log.info("Fetch completed..")
-      self ! newEpic(Parse(id))
-      houseKeeping()
-    case IndexComplete(id) ⇒ log.info("Index completed..")
+    case Completed(task, id, result) ⇒ task match {
+      case Fetch(_, _, _) ⇒
+        log.info("Fetch task completed")
+        currentEpic = None
+        sender ! Some(result)
+      // self ! newEpic(Parse(id))
+      case Parse(_) ⇒
+        log.info("Parse task completed")
+        currentEpic = None
+      // self ! newEpic(Parse(id))
+      case Index(_) ⇒
+        log.info("Index task completed")
+        currentEpic = None
+      // self ! newEpic(Index(id))
+      case _ ⇒ // just ignore other messages
+    }
   }
 
   def houseKeeping() {

@@ -3,16 +3,13 @@ package object gg {
   val DISALLOW = "Disallow:"
   val REGEXP_HTTP = "<a href=\"http://(.)*\">"
   val REGEXT_RELATIVE = "<a href=\"(.)*\">"
+
   object crawler {
-    sealed trait ggTask
-    case class Fetch(url: String, depth: Int, metadata: List[(String, String)]) extends ggTask
-    case class FetchComplete(id: String) extends ggTask
-    case object FetchFailed extends ggTask
-    case class Parse(id: String) extends ggTask
-    case class ParseComplete(id: String) extends ggTask
-    case object ParseFailed extends ggTask
-    case class Index(id: String) extends ggTask
-    case class IndexComplete(id: String) extends ggTask
-    case object IndexFailed extends ggTask
+    sealed trait Task
+    case class Fetch(url: String, depth: Int, metadata: List[(String, String)]) extends Task
+    case class Parse(id: String) extends Task
+    case class Index(id: String) extends Task
+    case class Completed[T <: Task](task: T, id: String, result: Any) extends Task
+    case class Failed[T <: Task](task: T, id: String) extends Task
   }
 }
