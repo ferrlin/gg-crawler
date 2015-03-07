@@ -1,7 +1,6 @@
 package in.ferrl.crawler.core
 
-import spray.http.HttpEntity
-import spray.http.HttpRequest
+import spray.http.{ HttpEntity, HttpRequest }
 import spray.httpx.unmarshalling.{ MalformedContent, Unmarshaller, Deserialized }
 import scala.util.{ Try, Success, Failure }
 import scala.concurrent.{ Future, future, Promise }
@@ -67,6 +66,7 @@ class FetchWorker(master: ActorRef) extends Worker[Task](master) {
           pipeline(Get(url.toString)).onComplete {
             case Success(result) ⇒
               // log.info(s"The result after fetch is -> $result")
+              esDTO.insertFetched(FetchedData(url.toString, result))
               master ! Completed(task, "someId", result)
               log.info("Fetching completed successfully.")
             case Failure(e) ⇒ log.error(e.getMessage)

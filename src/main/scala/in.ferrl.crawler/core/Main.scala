@@ -37,6 +37,8 @@ object Main extends App {
       case Success(result) ⇒ println(s"The result is $result")
       case Failure(_) ⇒ // just ignore it.
     }
-    // ggSystem.shutdown()
+
+    Thread.sleep(5000)
+    ggSystem.shutdown()
   }
 }

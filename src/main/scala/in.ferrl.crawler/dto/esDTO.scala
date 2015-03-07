@@ -1,24 +1,30 @@
 package in.ferrl.crawler.dto
 
-case class FetchedData(url: String, depth: Int, meta: List[(String, String)], content: List[String])
-case class ParsedData(url: String, meta: List[(String, String)])
-case class IndexedData(url: String, meta: List[(String, String)], content: List[String])
+// case class FetchedData(url: String, meta: List[(String, String)], content: List[String])
+case class FetchedData(url: String, content: List[String])
+// case class ParsedData(url: String, meta: List[(String, String)])
+case class ParsedData(url: String)
+// case class IndexedData(url: String, meta: List[(String, String)], content: List[String])
+case class IndexedData(url: String, content: List[String])
 
 import argonaut._, Argonaut._
 import scala.concurrent.Future
 
 object implicits {
   implicit def FetchedDataEncodeJson: EncodeJson[FetchedData] =
-    jencode4L((f: FetchedData) ⇒ (f.url, f.depth, f.meta, f.content))("url", "depth", "meta", "content")
+    // jencode3L((f: FetchedData) ⇒ (f.url, f.content))("url", "meta", "content")
+    jencode2L((f: FetchedData) ⇒ (f.url, f.content))("url", "content")
 
-  implicit def MetaDataEncodeJson: EncodeJson[List[(String, String)]] =
-    EncodeJson { case List((k, v)) ⇒ Json.obj(k -> jString(v)) }
+  // implicit def MetaDataEncodeJson: EncodeJson[List[(String, String)]] =
+  // EncodeJson { case List((k, v)) ⇒ Json.obj(k -> jString(v)) }
 
   implicit def ParsedDataEncodeJson: EncodeJson[ParsedData] =
-    jencode2L((p: ParsedData) ⇒ (p.url, p.meta))("url", "meta")
+    // jencode2L((p: ParsedData) ⇒ (p.url, p.meta))("url", "meta")
+    jencode1L((p: ParsedData) ⇒ (p.url))("url")
 
   implicit def IndexedDataEncodeJson: EncodeJson[IndexedData] =
-    jencode3L((i: IndexedData) ⇒ (i.url, i.meta, i.content))("url", "meta", "content")
+    // jencode3L((i: IndexedData) ⇒ (i.url, i.meta, i.content))("url", "meta", "content")
+    jencode2L((i: IndexedData) ⇒ (i.url, i.content))("url", "content")
 }
 
 object esDTO {

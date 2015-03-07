@@ -17,7 +17,7 @@ class StandardCrawler extends Actor with ActorLogging with WorkManager[Task] {
       case Fetch(_, _, _) ⇒
         log.info("Fetch task completed")
         currentEpic = None
-        sender ! Some(result)
+      // sender ! Some(result)
       // self ! newEpic(Parse(id))
       case Parse(_) ⇒
         log.info("Parse task completed")
