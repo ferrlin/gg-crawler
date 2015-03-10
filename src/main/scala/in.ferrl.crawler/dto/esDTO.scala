@@ -1,7 +1,7 @@
 package in.ferrl.crawler.dto
 
 // case class FetchedData(url: String, meta: List[(String, String)], content: List[String])
-case class FetchedData(url: String, content: List[String])
+case class FetchedData(url: String, raw: Option[String])
 // case class ParsedData(url: String, meta: List[(String, String)])
 case class ParsedData(url: String)
 // case class IndexedData(url: String, meta: List[(String, String)], content: List[String])
@@ -12,18 +12,12 @@ import scala.concurrent.Future
 
 object implicits {
   implicit def FetchedDataEncodeJson: EncodeJson[FetchedData] =
-    // jencode3L((f: FetchedData) ⇒ (f.url, f.content))("url", "meta", "content")
-    jencode2L((f: FetchedData) ⇒ (f.url, f.content))("url", "content")
-
-  // implicit def MetaDataEncodeJson: EncodeJson[List[(String, String)]] =
-  // EncodeJson { case List((k, v)) ⇒ Json.obj(k -> jString(v)) }
+    jencode2L((f: FetchedData) ⇒ (f.url, f.raw))("url", "raw")
 
   implicit def ParsedDataEncodeJson: EncodeJson[ParsedData] =
-    // jencode2L((p: ParsedData) ⇒ (p.url, p.meta))("url", "meta")
     jencode1L((p: ParsedData) ⇒ (p.url))("url")
 
   implicit def IndexedDataEncodeJson: EncodeJson[IndexedData] =
-    // jencode3L((i: IndexedData) ⇒ (i.url, i.meta, i.content))("url", "meta", "content")
     jencode2L((i: IndexedData) ⇒ (i.url, i.content))("url", "content")
 }
 

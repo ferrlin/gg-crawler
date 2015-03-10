@@ -12,31 +12,10 @@ import in.ferrl.crawler.pattern.WorkPulling._
 import gg.crawler._
 
 /**
- * Companion object for our GetContent actor.
- * Our string unmarshaller is defined here as well
- * as our custom type.
- */
-object FetchWorker {
-
-  private type Elements = List[String]
-
-  implicit object StringUnmarshaller extends Unmarshaller[Elements] {
-    val AHrefRegex = """<a href="([^"]*)">[^<]*</a>""".r
-    def apply(entity: HttpEntity): Deserialized[Elements] = {
-      val body = entity.asString
-      val matches = AHrefRegex.findAllMatchIn(body)
-      val hrefs = matches.map(_.group(1)).toList
-      Right(hrefs)
-    }
-  }
-}
-
-/**
  * Actor for getting http content
  */
 class FetchWorker(master: ActorRef) extends Worker[Task](master) {
   import gg.crawler._
-  import FetchWorker._
   import spray.client.pipelining._
   import akka.util.Timeout
   import in.ferrl.crawler.dto._
@@ -44,7 +23,7 @@ class FetchWorker(master: ActorRef) extends Worker[Task](master) {
   implicit val timeout = Timeout(5.seconds)
   def sendAndReceive = sendReceive
 
-  val pipeline: HttpRequest ⇒ Future[Elements] = sendAndReceive ~> unmarshal[Elements]
+  val pipeline: HttpRequest ⇒ Future[String] = sendAndReceive ~> unmarshal[String]
 
   def isCompatible(someType: Task): Boolean = someType match {
     case fetch: Fetch ⇒ true
@@ -63,24 +42,15 @@ class FetchWorker(master: ActorRef) extends Worker[Task](master) {
       prepareUrl(url) match {
         case Success(url: URL) ⇒
           log.info(s"Fetching commences at url:$url")
-          pipeline(Get(url.toString)).onComplete {
+          val strUrl = s"$url"
+          pipeline(Get(strUrl)).onComplete {
             case Success(result) ⇒
               // log.info(s"The result after fetch is -> $result")
-              esDTO.insertFetched(FetchedData(url.toString, result))
+              esDTO.insertFetched(FetchedData(url.toString, Some(result)))
               master ! Completed(task, "someId", result)
               log.info("Fetching completed successfully.")
             case Failure(e) ⇒ log.error(e.getMessage)
           }
-        /*pipeline(Get(url.toString)) flatMap { content ⇒
-            esDTO.insertFetched(FetchedData(url.toString, depth, meta, content))
-          } onComplete {
-            case Success(fetchedId) ⇒
-              log.info(s"The result after fetch is -> $fetchedId")
-              if (!fetchedId.isEmpty) master ! Complete(f, fetchedId)
-            case Failure(err) ⇒
-              log.error(err)
-              master ! Failed
-          }*/
         case Failure(ex) ⇒
           log.error(ex.getMessage)
           master ! Failed
