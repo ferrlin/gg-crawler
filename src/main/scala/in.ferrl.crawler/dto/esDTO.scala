@@ -1,10 +1,7 @@
 package in.ferrl.crawler.dto
 
-// case class FetchedData(url: String, meta: List[(String, String)], content: List[String])
 case class FetchedData(url: String, raw: Option[String])
-// case class ParsedData(url: String, meta: List[(String, String)])
 case class ParsedData(url: String)
-// case class IndexedData(url: String, meta: List[(String, String)], content: List[String])
 case class IndexedData(url: String, content: List[String])
 
 import argonaut._, Argonaut._
@@ -21,19 +18,23 @@ object implicits {
     jencode2L((i: IndexedData) ⇒ (i.url, i.content))("url", "content")
 }
 
-object esDTO {
-  import scala.concurrent.ExecutionContext.Implicits.global
-  import in.ferrl.aktic.core.DocPath
-  import in.ferrl.aktic.Aktic
-  import implicits._
+import scala.concurrent.ExecutionContext.Implicits.global
+import in.ferrl.aktic.core.DocPath
 
-  private[esDTO] val GG_INDEX = "gg"
+object Const {
 
+  private val GG_INDEX = "gg"
   val parsedDocPath = DocPath(GG_INDEX, "parsed")
   val fetchedDocPath = DocPath(GG_INDEX, "fetched")
   val indexedDocPath = DocPath(GG_INDEX, "indexed")
-  val client = Aktic()
+}
 
+object esDTO {
+  import in.ferrl.aktic.Aktic
+  import implicits._
+  import Const._
+
+  val client = Aktic()
   type ResultId = String
 
   def insertParsed(parsedData: ParsedData): Future[ResultId] =
@@ -50,7 +51,6 @@ object esDTO {
     jStringPL
 
   private[this] def prepare(strJson: String)(path: DocPath) = {
-    println(s"The strJons $strJson")
     client.index(None, strJson)(path).map { res ⇒
       object2IdLens.get(Parse.parseOption(res).get).getOrElse("")
     }

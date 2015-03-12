@@ -50,7 +50,6 @@ class FetchWorker(master: ActorRef) extends Worker[Task](master) {
                 case Success(someId) ⇒ master ! Completed(task, someId, result)
                 case Failure(e) ⇒ master ! Failed(s"Failed while saving fetched data for $url with error: $e")
               }
-            // log.info("Fetching completed successfully.")
             case Failure(e) ⇒ log.error(e.getMessage)
           }
         case Failure(ex) ⇒
