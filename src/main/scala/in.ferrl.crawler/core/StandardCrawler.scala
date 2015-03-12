@@ -14,21 +14,21 @@ class StandardCrawler extends Actor with ActorLogging with WorkManager[Task] {
 
   def customHandler: PartialFunction[Any, Unit] = {
     case Completed(task, id, result) ⇒ task match {
-      case Fetch(_, _, _) ⇒
+      case Fetch(_, _, proceed) ⇒
         log.info("Fetch task completed")
         currentEpic = None
-      // sender ! Some(result)
-      // self ! newEpic(Parse(id))
-      case Parse(_) ⇒
+        // sender ! Some(result)
+        if (proceed) self ! newEpic(Parse(id, proceed))
+      case Parse(_, proceed) ⇒
         log.info("Parse task completed")
         currentEpic = None
-      // self ! newEpic(Parse(id))
+        if (proceed) self ! newEpic(Index(id))
       case Index(_) ⇒
         log.info("Index task completed")
         currentEpic = None
-      // self ! newEpic(Index(id))
       case _ ⇒ // just ignore other messages
     }
+    case Failed(message) ⇒ log.warning(message)
   }
 
   def houseKeeping() {

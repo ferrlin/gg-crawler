@@ -33,7 +33,7 @@ object Main extends App {
     // Use this pattern if you're interest in the result
     // where you're waiting for it before saying it done.
     // val f = naive ? newEpic(GET("http://ferrl.in"))
-    (master ? newEpic(Fetch(url = "http://ferrl.in", depth = 1, metadata = List.empty))).onComplete {
+    (master ? newEpic(Fetch(url = "http://ferrl.in", depth = 1, proceed = false))).onComplete {
       case Success(result) ⇒ println(s"The result is $result")
       case Failure(_) ⇒ // just ignore it.
     }

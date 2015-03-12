@@ -7,7 +7,7 @@ import org.scalatest.{ WordSpecLike, BeforeAndAfterAll, MustMatchers }
 import gg.crawler._
 import in.ferrl.crawler.pattern._
 
-class TestWorkOwnershipWithWorkerHandler extends Actor with ActorLogging with WorkManager[ggTask] {
+class TestWorkOwnershipWithWorkerHandler extends Actor with ActorLogging with WorkManager[Task] {
   def receive = workerHandler
 }
 
@@ -39,10 +39,10 @@ class WorkOwnershipSpec extends TestKit(ActorSystem("WorkOwnershipSpec"))
     // This should be in the integration test
     "allows worker to request work" in {
       val worker1 = TestProbe()
-      val actor = system.actorOf(Props[TestWorkOwnership[ggTask]])
+      val actor = system.actorOf(Props[TestWorkOwnership[Task]])
 
       def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
-      val work = Fetch(url = "http://ferrl.in", depth = 1, metadata = List.empty)
+      val work = Fetch(url = "http://ferrl.in", depth = 1, proceed = false)
 
       // default behavior by worker on prestart
       actor ! RegisterWorker(worker1.ref)
@@ -60,9 +60,9 @@ class WorkOwnershipSpec extends TestKit(ActorSystem("WorkOwnershipSpec"))
     }
 
     "allow us to send work" in {
-      val real = TestActorRef[TestWorkOwnership[ggTask]].underlyingActor
+      val real = TestActorRef[TestWorkOwnership[Task]].underlyingActor
       def newEpic[T](work: T) = new Epic[T] { override def iterator = Seq(work).iterator }
-      val work = Fetch(url = "http://ferrl.in", depth = 1, metadata = List.empty)
+      val work = Fetch(url = "http://ferrl.in", depth = 1, proceed = false)
       real.receive(RegisterWorker(testActor))
       real.receive(newEpic(work))
       // TODO: fix this..

@@ -31,7 +31,7 @@ class FetchWorker(master: ActorRef) extends Worker[Task](master) {
   }
 
   override def customHandler = {
-    case task @ Fetch(url, depth, meta) ⇒ {
+    case task @ Fetch(url, depth, _) ⇒ {
       def prepareUrl(url: String): Try[URL] = Try(new URL(url))
 
       def dropLastSlash(s: String): String = {
@@ -46,9 +46,11 @@ class FetchWorker(master: ActorRef) extends Worker[Task](master) {
           pipeline(Get(strUrl)).onComplete {
             case Success(result) ⇒
               // log.info(s"The result after fetch is -> $result")
-              esDTO.insertFetched(FetchedData(url.toString, Some(result)))
-              master ! Completed(task, "someId", result)
-              log.info("Fetching completed successfully.")
+              esDTO.insertFetched(FetchedData(url.toString, Some(result))) onComplete {
+                case Success(someId) ⇒ master ! Completed(task, someId, result)
+                case Failure(e) ⇒ master ! Failed(s"Failed while saving fetched data for $url with error: $e")
+              }
+            // log.info("Fetching completed successfully.")
             case Failure(e) ⇒ log.error(e.getMessage)
           }
         case Failure(ex) ⇒
