@@ -47,7 +47,7 @@ class FetchWorker(master: ActorRef) extends Worker[Task](master) {
             case Success(result) ⇒
               // log.info(s"The result after fetch is -> $result")
               esDTO.insertFetched(FetchedData(url.toString, Some(result))) onComplete {
-                case Success(someId) ⇒ master ! Completed(task, someId, result)
+                case Success(someId) ⇒ master ! Completed(task, someId, Some(result))
                 case Failure(e) ⇒ master ! Failed(s"Failed while saving fetched data for $url with error: $e")
               }
             case Failure(e) ⇒ log.error(e.getMessage)

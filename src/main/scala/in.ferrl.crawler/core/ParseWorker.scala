@@ -16,9 +16,9 @@ import gg.crawler._
 
   def doWork(work: ggTask): Future[_] = if (isCompatible(work)) {
     work match {
-      case Parse(url) ⇒
+      case Parse(url,_) ⇒
         parse(url)
-        master ! ParseComplete(url)
+        master ! Completed(url)
     }
   }
 

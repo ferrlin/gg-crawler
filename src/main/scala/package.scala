@@ -14,7 +14,7 @@ package object gg {
     case class Fetch(url: String, depth: Int, proceed: Boolean) extends Task
     case class Parse(id: String, proceed: Boolean) extends Task
     case class Index(id: String) extends Task
-    case class Completed[T <: Task](task: T, id: String, result: Any) extends Task
+    case class Completed[T <: Task](task: T, id: String, result: Option[Any]) extends Task
     case class Failed(message: String) extends Task
   }
 }
