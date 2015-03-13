@@ -46,7 +46,7 @@ object esDTO {
   def insertIndexed(indexedData: IndexedData): Future[ResultId] =
     prepare(indexedData.asJson.toString)(indexedDocPath)
 
-  def getRawContentFor(id: String): Future[String] =
+  def getFetchedDataWith(id: String): Future[String] =
     get(id)(fetchedDocPath)
 
   lazy val object2IdLens = jObjectPL >=>
@@ -59,6 +59,5 @@ object esDTO {
     }
   }
 
-  private[this] def get(id: String)(path: DocPath) = client.get(id)
-
+  private[this] def get(id: String)(path: DocPath) = client.get(id)(path)
 }

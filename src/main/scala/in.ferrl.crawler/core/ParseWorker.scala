@@ -7,17 +7,17 @@ import in.ferrl.crawler.pattern.Worker
 import in.ferrl.crawler.parser.{ JsoupParser ⇒ HtmlParser }
 import gg.crawler._
 
-object ParsedWorker {
+object ParseWorker {
   case class ParsedSchema(url: String, content: Option[String], desc: Option[String], links: List[String], tags: List[String])
 }
 
 class ParseWorker(master: ActorRef) extends Worker[Task](master) {
 
-  import ParsedWorker._
+  import ParseWorker._
   import in.ferrl.crawler.dto._
 
-  def isCompatible(someType: ggTask) = someType match {
-    case Parse(_) ⇒ true
+  def isCompatible(someType: Task) = someType match {
+    case Parse(_, _) ⇒ true
     case _ ⇒ false
   }
 
@@ -25,11 +25,11 @@ class ParseWorker(master: ActorRef) extends Worker[Task](master) {
 
   override def customHandler = {
     case task @ Parse(id, _) ⇒
-      esDTO.getRawContentFor(id) onComplete {
-        case Success(content) ⇒ // parsing the content
-          val ParsedSchema(url, content, desc, links, tags) = htmlParser.parse(content)
+      esDTO.getFetchedDataWith(id) onComplete {
+        case Success(json) ⇒ // parsing the content
+          val ParsedSchema(url, content, desc, links, tags) = htmlParser.parse(json)
           esDTO.insertParsed(ParsedData(url, content, desc, links, tags)).onComplete {
-            case Success(id) ⇒ master ! Completed(task, someId, None)
+            case Success(someId) ⇒ master ! Completed(task, someId, None)
             case Failure(e) ⇒ master ! Failed(s"Failed while saving parsed data for $url with error: $e")
           }
         case Failure(e) ⇒
