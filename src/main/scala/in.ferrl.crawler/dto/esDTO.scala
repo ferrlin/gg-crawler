@@ -35,7 +35,10 @@ object esDTO {
   import Const._
 
   val client = Aktic()
+
   type ResultId = String
+  type ResultUrl = String
+  type ResultRaw = String
 
   def insertParsed(parsedData: ParsedData): Future[ResultId] =
     prepare(parsedData.asJson.toString)(parsedDocPath)
@@ -46,11 +49,19 @@ object esDTO {
   def insertIndexed(indexedData: IndexedData): Future[ResultId] =
     prepare(indexedData.asJson.toString)(indexedDocPath)
 
-  def getFetchedDataWith(id: String): Future[String] =
+  def getFetchedDataWith(id: String): Future[(ResultUrl, ResultRaw)] =
     get(id)(fetchedDocPath)
 
   lazy val object2IdLens = jObjectPL >=>
     jsonObjectPL("_id") >=>
+    jStringPL
+
+  lazy val object2UrlLens = jObjectPL >=>
+    jsonObjectPL("url") >=>
+    jStringPL
+
+  lazy val object2RawContentLens = jObjectPL >=>
+    jsonObjectPL("raw") >=>
     jStringPL
 
   private[this] def prepare(strJson: String)(path: DocPath) = {
@@ -59,5 +70,9 @@ object esDTO {
     }
   }
 
-  private[this] def get(id: String)(path: DocPath) = client.get(id)(path)
+  private[this] def get(id: String)(path: DocPath) = client.get(id)(path).map { res ⇒
+    val url = object2UrlLens.get(Parse.parseOption(res).get).getOrElse("")
+    val raw = object2RawContentLens.get(Parse.parseOption(res).get).getOrElse("")
+    (url, raw)
+  }
 }

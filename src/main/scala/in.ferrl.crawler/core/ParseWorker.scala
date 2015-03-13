@@ -8,7 +8,7 @@ import in.ferrl.crawler.parser.{ JsoupParser ⇒ HtmlParser }
 import gg.crawler._
 
 object ParseWorker {
-  case class ParsedSchema(url: String, content: Option[String], desc: Option[String], links: List[String], tags: List[String])
+  case class ParsedSchema(content: Option[String], desc: Option[String], links: List[String], tags: List[String])
 }
 
 class ParseWorker(master: ActorRef) extends Worker[Task](master) {
@@ -26,8 +26,8 @@ class ParseWorker(master: ActorRef) extends Worker[Task](master) {
   override def customHandler = {
     case task @ Parse(id, _) ⇒
       esDTO.getFetchedDataWith(id) onComplete {
-        case Success(json) ⇒ // parsing the content
-          val ParsedSchema(url, content, desc, links, tags) = htmlParser.parse(json)
+        case Success((url, raw)) ⇒ // parsing the content
+          val ParsedSchema(content, desc, links, tags) = htmlParser.parse(raw)
           esDTO.insertParsed(ParsedData(url, content, desc, links, tags)).onComplete {
             case Success(someId) ⇒ master ! Completed(task, someId, None)
             case Failure(e) ⇒ master ! Failed(s"Failed while saving parsed data for $url with error: $e")
