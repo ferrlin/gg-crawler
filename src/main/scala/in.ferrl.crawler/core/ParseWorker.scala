@@ -4,33 +4,36 @@ import akka.actor.ActorRef
 import scala.concurrent.{ Future, future }
 import scala.util.{ Success, Failure }
 import in.ferrl.crawler.pattern.Worker
-import in.ferrl.crawler.parser.TikaParser
+import in.ferrl.crawler.parser.{ JsoupParser ⇒ HtmlParser }
 import gg.crawler._
 
-/*class ParseWorker(master: ActorRef) extends Worker[ggTask](master) {
+object ParsedWorker {
+  case class ParsedSchema(url: String, content: Option[String], desc: Option[String], links: List[String], tags: List[String])
+}
+
+class ParseWorker(master: ActorRef) extends Worker[Task](master) {
+
+  import ParsedWorker._
+  import in.ferrl.crawler.dto._
 
   def isCompatible(someType: ggTask) = someType match {
     case Parse(_) ⇒ true
     case _ ⇒ false
   }
 
-  def doWork(work: ggTask): Future[_] = if (isCompatible(work)) {
-    work match {
-      case Parse(url,_) ⇒
-        parse(url)
-        master ! Completed(url)
-    }
-  }
+  lazy val htmlParser = new HtmlParser()
 
-  import in.ferrl.crawler.dto._
-  lazy val parser = new TikaParser
-
-  def parse(url: String): Unit = {
-    // where to get content data, from elasticsearch data store?
-    // -- parsing logic -- //
-    parser.parse(url, content) match {
-      case Success(p) ⇒ esDTO.insertParsed(ParsedData(url, p._2))
-      case Failure(ex) ⇒ log.error(ex.getMessage)
-    }
+  override def customHandler = {
+    case task @ Parse(id, _) ⇒
+      esDTO.getRawContentFor(id) onComplete {
+        case Success(content) ⇒ // parsing the content
+          val ParsedSchema(url, content, desc, links, tags) = htmlParser.parse(content)
+          esDTO.insertParsed(ParsedData(url, content, desc, links, tags)).onComplete {
+            case Success(id) ⇒ master ! Completed(task, someId, None)
+            case Failure(e) ⇒ master ! Failed(s"Failed while saving parsed data for $url with error: $e")
+          }
+        case Failure(e) ⇒
+          master ! Failed(s"Failed retrieving raw content from elasticsearch")
+      }
   }
-}*/ 
+}

@@ -31,6 +31,7 @@ libraryDependencies ++= {
     "com.github.scala-incubator.io" %% "scala-io-file" % sioV,
     "org.apache.tika" % "tika-core" % tikaV,
     "org.apache.tika" % "tika-parsers" % tikaV,
+    "org.jsoup" % "jsoup" % "1.8.1",
     "com.datastax.cassandra" % "cassandra-driver-core" % "1.0.1" exclude ("org.xerial.snappy", "snappy-java"),
     "org.xerial.snappy" % "snappy-java" % "1.0.5",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value,

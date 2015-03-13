@@ -17,7 +17,7 @@ class StandardCrawler extends Actor with ActorLogging with WorkManager[Task] {
       case Fetch(_, _, proceed) ⇒
         log.info("Fetch completed successfully.")
         currentEpic = None
-        // sender ! Some(result)
+        zender.get ! Some(result)
         if (proceed) self ! newEpic(Parse(id, proceed))
       case Parse(_, proceed) ⇒
         log.info("Parse completed successfully.")

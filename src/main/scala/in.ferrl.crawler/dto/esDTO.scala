@@ -1,7 +1,7 @@
 package in.ferrl.crawler.dto
 
 case class FetchedData(url: String, raw: Option[String])
-case class ParsedData(url: String)
+case class ParsedData(url: String, content: Option[String], desc: Option[String], links: List[String], tags: List[String])
 case class IndexedData(url: String, content: List[String])
 
 import argonaut._, Argonaut._
@@ -12,7 +12,7 @@ object implicits {
     jencode2L((f: FetchedData) ⇒ (f.url, f.raw))("url", "raw")
 
   implicit def ParsedDataEncodeJson: EncodeJson[ParsedData] =
-    jencode1L((p: ParsedData) ⇒ (p.url))("url")
+    jencode5L((p: ParsedData) ⇒ (p.url, p.content, p.desc, p.links, p.tags))("url", "content", "desc", "links", "tags")
 
   implicit def IndexedDataEncodeJson: EncodeJson[IndexedData] =
     jencode2L((i: IndexedData) ⇒ (i.url, i.content))("url", "content")
@@ -46,6 +46,9 @@ object esDTO {
   def insertIndexed(indexedData: IndexedData): Future[ResultId] =
     prepare(indexedData.asJson.toString)(indexedDocPath)
 
+  def getRawContentFor(id: String): Future[String] =
+    get(id)(fetchedDocPath)
+
   lazy val object2IdLens = jObjectPL >=>
     jsonObjectPL("_id") >=>
     jStringPL
@@ -55,4 +58,7 @@ object esDTO {
       object2IdLens.get(Parse.parseOption(res).get).getOrElse("")
     }
   }
+
+  private[this] def get(id: String)(path: DocPath) = client.get(id)
+
 }

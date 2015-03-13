@@ -23,6 +23,7 @@ import WorkPulling._
 
 trait WorkOwnership[T] {
   var currentEpic: Option[Epic[T]] = None
+  var zender: Option[ActorRef] = None
   def workHandler: Actor.Receive
   def compose: Actor.Receive
 }
@@ -40,6 +41,8 @@ trait WorkManager[T] extends WorkOwnership[T] { this: Actor with ActorLogging â‡
       } else if (workers.isEmpty) {
         log.error("Work is available but no workers are registered.")
       } else {
+        // Keep a reference of the sender
+        zender = Some(sender())
         log.info("New work received.. Notifying workers")
         currentEpic = Some(epic)
         workers foreach { w â‡’ epic.iterator.foreach { w ! WorkAvailable(_) } }
