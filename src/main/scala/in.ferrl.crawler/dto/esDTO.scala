@@ -57,10 +57,14 @@ object esDTO {
     jStringPL
 
   lazy val object2UrlLens = jObjectPL >=>
+    jsonObjectPL("_source") >=>
+    jObjectPL >=>
     jsonObjectPL("url") >=>
     jStringPL
 
   lazy val object2RawContentLens = jObjectPL >=>
+    jsonObjectPL("_source") >=>
+    jObjectPL >=>
     jsonObjectPL("raw") >=>
     jStringPL
 

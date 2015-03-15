@@ -1,6 +1,6 @@
 package in.ferrl.crawler.core
 
-import akka.actor.ActorRef
+import akka.actor.{ ActorRef, Props }
 import scala.concurrent.{ Future, future }
 import scala.util.{ Success, Failure }
 import in.ferrl.crawler.pattern.Worker
@@ -8,6 +8,7 @@ import in.ferrl.crawler.parser.{ JsoupParser ⇒ HtmlParser }
 import gg.crawler._
 
 object ParseWorker {
+  def props(master: ActorRef) = Props(new ParseWorker(master))
   case class ParsedSchema(content: Option[String], desc: Option[String], links: List[String], tags: List[String])
 }
 

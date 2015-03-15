@@ -15,7 +15,12 @@ class JsoupParser {
     val links: List[String] = document.select("a").map(_.attr("abs:href")).toList
     val tags: List[String] = document.select("meta").map(_.attr("[property=og:keywords]")).toList
     val desc = Some(document.select("meta[property=og:description]").toString())
+    
+    // val content = Some("THis is a testing content")
+    // val links = List("http://ferrl.in", "http://www.example.com")
+    // val tags = List("test", "sample", "mock")
+    // val desc = Some("This is a sample description")
 
-    ParsedSchema(content, desc, links, tags)
+    new ParsedSchema(content, desc, links, tags)
   }
 }

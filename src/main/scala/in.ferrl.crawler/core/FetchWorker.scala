@@ -5,11 +5,15 @@ import spray.httpx.unmarshalling.{ MalformedContent, Unmarshaller, Deserialized 
 import scala.util.{ Try, Success, Failure }
 import scala.concurrent.{ Future, future, Promise }
 import java.net.URL
-import akka.actor.{ Actor, ActorRef }
+import akka.actor.{ Actor, ActorRef, Props }
 import scala.concurrent.duration._
 import in.ferrl.crawler.pattern.Worker
 import in.ferrl.crawler.pattern.WorkPulling._
 import gg.crawler._
+
+object FetchWorker {
+  def props(master: ActorRef) = Props(new FetchWorker(master))
+}
 
 /**
  * Actor for getting http content
@@ -41,7 +45,7 @@ class FetchWorker(master: ActorRef) extends Worker[Task](master) {
 
       prepareUrl(url) match {
         case Success(url: URL) ⇒
-          log.info(s"Fetching commences at url:$url")
+          // log.info(s"Fetching commences at url:$url")
           val strUrl = s"$url"
           pipeline(Get(strUrl)).onComplete {
             case Success(result) ⇒
