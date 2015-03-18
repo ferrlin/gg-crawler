@@ -4,7 +4,7 @@ version := "0.4.1"
 
 crossScalaVersions := Seq("2.10.4", "2.11.5")
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 
 resolvers += "spray repo" at "http://repo.spray.io"
 
@@ -26,7 +26,7 @@ libraryDependencies ++= {
     "io.spray" %% "spray-client" % sprayV,
     "io.spray" %% "spray-routing" % sprayV,
     "io.argonaut" %% "argonaut" % argoV,
-    "in.ferrl" %% "aktic" % "0.1.0",
+    "in.ferrl" %% "aktic" % "0.1.3",
     "com.github.scala-incubator.io" %% "scala-io-core" % sioV,
     "com.github.scala-incubator.io" %% "scala-io-file" % sioV,
     "org.apache.tika" % "tika-core" % tikaV,

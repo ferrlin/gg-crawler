@@ -22,7 +22,7 @@ class StandardCrawler extends Actor with ActorLogging with WorkManager[Task] {
       case Parse(_, proceed) ⇒
         log.info("Parse completed successfully.")
         currentEpic = None
-        // if (proceed) self ! newEpic(Index(id))
+      // if (proceed) self ! newEpic(Index(id))
       case Index(_) ⇒
         log.info("Index completed successfully.")
         currentEpic = None
